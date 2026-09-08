@@ -1,0 +1,272 @@
+---
+// src/components/Hero.astro
+// AGENTE FRONTEND: rellena las props con los datos del contrato JSON
+// AGENTE MOTION: usa los data-attributes para inyectar animaciones GSAP
+
+import Button from './Button.astro';
+import ShaderField from './ShaderField.astro';
+
+const {
+  eyebrow,
+  headline,
+  subheadline,
+  ctaText,
+  ctaHref,
+  ctaSecondaryText,
+  ctaSecondaryHref,
+  backgroundImage,
+  useShader = false,
+} = Astro.props;
+
+const words = headline ? headline.split(' ') : [];
+---
+
+<section
+  class="hero"
+  data-gsap-section="hero"
+  style={backgroundImage ? `--hero-bg: url('${backgroundImage}')` : ''}
+>
+  {useShader && <ShaderField class="hero__shaderfield" />}
+  {backgroundImage && <div class="hero__bg" data-hero-bg></div>}
+  <div class="container hero__inner">
+    <div class="hero__content" data-gsap-animate="hero-content">
+
+      {eyebrow && (
+        <p class="hero__eyebrow" data-gsap-animate="eyebrow">{eyebrow}</p>
+      )}
+
+      <h1 class="hero__headline" data-gsap-split="words">
+        {words.map((word) => (
+          <span class="hero__word-outer">
+            <span class="hero__word">{word}</span>
+          </span>
+        ))}
+      </h1>
+
+      {subheadline && (
+        <p class="hero__sub" data-gsap-animate="fade-up">
+          {subheadline}
+        </p>
+      )}
+
+      <div class="hero__cta" data-gsap-animate="fade-up-delay">
+        {ctaText && (
+          <Button href={ctaHref} variant="primary" size="lg">
+            {ctaText}
+          </Button>
+        )}
+        {ctaSecondaryText && (
+          <Button href={ctaSecondaryHref} variant="secondary" size="lg">
+            {ctaSecondaryText}
+          </Button>
+        )}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true });
+
+  let mm;
+
+  function initHero() {
+    mm?.revert();
+    const section = document.querySelector('[data-gsap-section="hero"]');
+    if (!section) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!reduced) {
+      const eyebrow = section.querySelector('[data-gsap-animate="eyebrow"]');
+      const words = section.querySelectorAll('.hero__word');
+      const sub   = section.querySelector('[data-gsap-animate="fade-up"]');
+      const cta   = section.querySelector('[data-gsap-animate="fade-up-delay"]');
+
+      const tl = gsap.timeline({ defaults: { ease: 'expo.out' } });
+
+      if (eyebrow) tl.from(eyebrow, { y: 16, opacity: 0, duration: 0.7 });
+      tl.from(words, { y: 48, opacity: 0, stagger: 0.06, duration: 1 }, eyebrow ? '-=0.35' : 0);
+      if (sub) tl.from(sub, { y: 24, opacity: 0, duration: 0.9 }, '-=0.4');
+      if (cta) tl.from(cta, { y: 24, opacity: 0, duration: 0.8 }, '-=0.5');
+
+      // Magnetic CTA — desktop (pointer: fine) only
+      const primaryBtn = section.querySelector('.hero__cta .btn--primary');
+      if (primaryBtn && window.matchMedia('(pointer: fine)').matches) {
+        const qx = gsap.quickTo(primaryBtn, 'x', { duration: 0.5, ease: 'power3.out' });
+        const qy = gsap.quickTo(primaryBtn, 'y', { duration: 0.5, ease: 'power3.out' });
+
+        primaryBtn.addEventListener('mousemove', (e) => {
+          const r  = primaryBtn.getBoundingClientRect();
+          const cx = r.left + r.width  / 2;
+          const cy = r.top  + r.height / 2;
+          qx((e.clientX - cx) * 0.4);
+          qy((e.clientY - cy) * 0.4);
+        });
+
+        primaryBtn.addEventListener('mouseleave', () => {
+          gsap.to(primaryBtn, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1, 0.3)' });
+        });
+      }
+    }
+
+    // Parallax sutil de la imagen de fondo — solo desktop (§15.6.1: scrub siempre en matchMedia)
+    const bg = section.querySelector('[data-hero-bg]');
+    if (bg && !reduced) {
+      mm = gsap.matchMedia();
+      mm.add('(min-width: 768px)', () => {
+        const tween = gsap.fromTo(
+          bg,
+          { yPercent: -6 },
+          {
+            yPercent: 6,
+            ease: 'none',
+            scrollTrigger: { trigger: section, start: 'top top', end: 'bottom top', scrub: true },
+          }
+        );
+        return () => tween.scrollTrigger?.kill();
+      });
+    }
+  }
+
+  document.addEventListener('astro:page-load', initHero);
+  document.addEventListener('astro:before-swap', () => mm?.revert());
+</script>
+
+<style>
+  .hero {
+    /* Momento oscuro sobre la foto — igual que Manifesto: la foto necesita un scrim
+       oscuro para legibilidad y drama; un velo del tema claro se ve lavado/plano. */
+    --bg-primary: #16130d;
+    --bg-secondary: #241f16;
+    --text-primary: #f2ece0;
+    --text-secondary: #b8ab95;
+    --accent: #c9a15c;
+    --accent-hover: #dbb572;
+    --border: #3a3222;
+
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background-color: var(--bg-primary);
+    color-scheme: dark;
+    overflow: hidden;
+  }
+
+  /* Imagen de fondo (var --hero-bg, set inline cuando hay backgroundImage) — elemento real
+     (no ::before) para poder animarle parallax con GSAP. Peso visual a la derecha. */
+  .hero__bg {
+    position: absolute;
+    inset: -6% 0;
+    background-image: var(--hero-bg);
+    background-size: cover;
+    background-position: right center;
+    z-index: 0;
+    will-change: transform;
+  }
+
+  /* Velo para legibilidad: opaco a la izquierda (texto) → transparente a la derecha (imagen),
+     más un degradado inferior para el CTA/subtítulo */
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+      linear-gradient(
+        to right,
+        var(--bg-primary) 0%,
+        color-mix(in srgb, var(--bg-primary) 65%, transparent) 42%,
+        transparent 72%
+      ),
+      linear-gradient(
+        to top,
+        var(--bg-primary) 6%,
+        color-mix(in srgb, var(--bg-primary) 38%, transparent) 55%,
+        color-mix(in srgb, var(--bg-primary) 78%, transparent) 100%
+      );
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: 2;
+    padding-top: var(--space-2xl);
+    padding-bottom: var(--space-2xl);
+  }
+
+  .hero__content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    max-width: 760px;
+  }
+
+  .hero :global(.hero__shaderfield) {
+    z-index: 0;
+  }
+
+  .hero__eyebrow {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  /* ── Headline protagonista ── */
+  .hero__headline {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.25em;
+    row-gap: 0.05em;
+    align-items: flex-end;
+    font-family: var(--font-heading);
+    font-size: clamp(2.5rem, 6.5vw, 5.5rem);
+    line-height: 0.98;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+  }
+
+  /* Mask container: overflow:hidden recorta el y:48 inicial */
+  .hero__word-outer {
+    overflow: hidden;
+    padding-bottom: 0.06em;
+    margin-bottom: -0.06em;
+  }
+
+  .hero__word {
+    display: block;
+  }
+
+  .hero__sub {
+    font-family: var(--font-body);
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 480px;
+  }
+
+  .hero__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  @media (max-width: 640px) {
+    .hero__cta {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .hero__cta :global(.btn) {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>

@@ -1,0 +1,360 @@
+---
+// src/components/Hero.astro
+// "Anillos de Roble" — hero editorial con fondo fotográfico de bosque de robles.
+// Capas de profundidad (parallax): (1) fondo hace zoom lento con el scroll (scrub) —
+// el "árbol" que se acerca; (2) hojas SVG de línea caen en loop continuo, INDEPENDIENTES
+// del scroll — nunca se detienen ni se atan al scrub; (3) anillo de crecimiento se dibuja
+// una sola vez al cargar. Las tres capas nunca comparten timeline para que el efecto lea
+// como profundidad real, no como una sola animación.
+const {
+  eyebrow,
+  headline,
+  subheadline,
+  ctaText,
+  ctaHref,
+} = Astro.props;
+
+const words = headline ? headline.split(' ') : [];
+
+// Config determinista de hojas (sin Math.random — variación manual fija)
+const leaves = [
+  { left: '8%',  size: 34, delay: '-2s',  duration: '13s', drift: '18px',  rotate: '140deg' },
+  { left: '22%', size: 22, delay: '-7s',  duration: '10s', drift: '-24px', rotate: '-100deg' },
+  { left: '38%', size: 40, delay: '-4.5s',duration: '15s', drift: '14px',  rotate: '200deg' },
+  { left: '61%', size: 26, delay: '-10s', duration: '11s', drift: '-16px', rotate: '-160deg' },
+  { left: '77%', size: 32, delay: '-1s',  duration: '14s', drift: '20px',  rotate: '120deg' },
+  { left: '90%', size: 20, delay: '-6s',  duration: '9s',  drift: '-12px', rotate: '-90deg' },
+];
+---
+
+<section class="hero" id="inicio" data-gsap-section="hero">
+  <div class="hero__bg" data-hero-bg style={`background-image: url('/images/hero-bosque.jpg')`}></div>
+  <div class="hero__scrim" aria-hidden="true"></div>
+
+  <!-- Capa de hojas — SVG de línea, caída continua e independiente del scroll -->
+  <div class="hero__leaves" aria-hidden="true" data-hero-leaves>
+    {leaves.map((leaf) => (
+      <svg
+        class="leaf"
+        style={`--leaf-left:${leaf.left}; --leaf-size:${leaf.size}px; --leaf-delay:${leaf.delay}; --leaf-duration:${leaf.duration}; --leaf-drift:${leaf.drift}; --leaf-rotate:${leaf.rotate};`}
+        viewBox="0 0 74 90"
+        fill="none"
+      >
+        <path
+          d="M32 3C34 10 43 13 46 22C53 18 62 24 59 34C67 32 74 40 67 48C74 53 71 63 63 65C67 73 59 79 51 75C51 83 41 88 35 81C31 87 21 85 19 77C11 79 5 71 9 63C1 61 -1 51 7 47C1 41 5 31 15 31C11 21 19 11 29 15C27 8 29 2 32 3Z"
+          stroke="currentColor"
+          stroke-width="1.4"
+        />
+        <path d="M32 15 L34 79" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
+      </svg>
+    ))}
+  </div>
+
+  <!-- Anillo de crecimiento — se dibuja una vez al cargar -->
+  <svg class="hero__ring" viewBox="0 0 240 240" aria-hidden="true" data-hero-ring>
+    <circle cx="120" cy="120" r="52"  fill="none" stroke="currentColor" stroke-width="1" />
+    <circle cx="120" cy="120" r="78"  fill="none" stroke="currentColor" stroke-width="1" />
+    <circle cx="120" cy="120" r="104" fill="none" stroke="currentColor" stroke-width="1" />
+    <circle cx="120" cy="120" r="130" fill="none" stroke="currentColor" stroke-width="1" />
+  </svg>
+
+  <div class="container hero__inner">
+    <div class="hero__topline" data-hero-topline>
+      <span>Grupo Los Robles — Holding</span>
+      <span>( 5 divisiones )</span>
+    </div>
+
+    <div class="hero__body">
+      {eyebrow && <p class="hero__eyebrow" data-hero-eyebrow>{eyebrow}</p>}
+
+      <h1 class="hero__headline">
+        {words.map((word) => (
+          <span class="hero__word-mask">
+            <span class="hero__word" data-hero-word>{word}&nbsp;</span>
+          </span>
+        ))}
+      </h1>
+
+      {subheadline && <p class="hero__sub" data-hero-sub>{subheadline}</p>}
+    </div>
+
+    <div class="hero__foot">
+      {ctaText && (
+        <a href={ctaHref} class="hero__cta" data-hero-cta>
+          <span>{ctaText}</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </a>
+      )}
+      <div class="hero__scrollcue" data-hero-scrollcue>
+        <span class="hero__scrollline" aria-hidden="true"></span>
+        Scroll
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  let mm;
+
+  function initHero() {
+    mm?.revert();
+    const section = document.querySelector('[data-gsap-section="hero"]');
+    if (!section) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const bg = section.querySelector('[data-hero-bg]');
+    const ring = section.querySelector('[data-hero-ring]');
+    const topline = section.querySelector('[data-hero-topline]');
+    const eyebrow = section.querySelector('[data-hero-eyebrow]');
+    const words = section.querySelectorAll('[data-hero-word]');
+    const sub = section.querySelector('[data-hero-sub]');
+    const cta = section.querySelector('[data-hero-cta]');
+    const scrollcue = section.querySelector('[data-hero-scrollcue]');
+    const ringCircles = ring ? ring.querySelectorAll('circle') : [];
+
+    if (reduced) {
+      gsap.set(ringCircles, { strokeDashoffset: 0 });
+      return;
+    }
+
+    // ── Intro: timeline de entrada (una sola vez) ──
+    ringCircles.forEach((c) => {
+      const len = c.getTotalLength();
+      gsap.set(c, { strokeDasharray: len, strokeDashoffset: len });
+    });
+
+    const tl = gsap.timeline({ defaults: { ease: 'expo.out' } });
+    tl.to(ringCircles, { strokeDashoffset: 0, duration: 1.6, stagger: 0.15 }, 0.1);
+    if (topline) tl.from(topline, { opacity: 0, y: -10, duration: 0.6 }, 0.2);
+    if (eyebrow) tl.from(eyebrow, { opacity: 0, y: 16, duration: 0.7 }, 0.35);
+    tl.from(words, { yPercent: 110, opacity: 0, stagger: 0.05, duration: 1 }, 0.4);
+    if (sub) tl.from(sub, { opacity: 0, y: 18, duration: 0.8 }, '-=0.55');
+    if (cta) tl.from(cta, { opacity: 0, y: 14, duration: 0.7 }, '-=0.5');
+    if (scrollcue) tl.from(scrollcue, { opacity: 0, duration: 0.6 }, '-=0.4');
+
+    // ── Capa 1: el fondo se acerca con el scroll (scrub) — el "árbol" ──
+    mm = gsap.matchMedia();
+    mm.add('(min-width: 768px)', () => {
+      let bgTween;
+      if (bg) {
+        bgTween = gsap.fromTo(
+          bg,
+          { scale: 1 },
+          {
+            scale: 1.18,
+            ease: 'none',
+            scrollTrigger: { trigger: section, start: 'top top', end: 'bottom top', scrub: true },
+          }
+        );
+      }
+      return () => bgTween?.scrollTrigger?.kill();
+    });
+
+    // Magnetismo sutil del CTA (desktop, puntero fino)
+    if (cta && window.matchMedia('(pointer: fine)').matches) {
+      const qx = gsap.quickTo(cta, 'x', { duration: 0.5, ease: 'power3.out' });
+      const qy = gsap.quickTo(cta, 'y', { duration: 0.5, ease: 'power3.out' });
+      cta.addEventListener('mousemove', (e) => {
+        const r = cta.getBoundingClientRect();
+        qx((e.clientX - (r.left + r.width / 2)) * 0.25);
+        qy((e.clientY - (r.top + r.height / 2)) * 0.25);
+      });
+      cta.addEventListener('mouseleave', () => gsap.to(cta, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.4)' }));
+    }
+  }
+
+  document.addEventListener('astro:page-load', initHero);
+  document.addEventListener('astro:before-swap', () => mm?.revert());
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: hidden;
+    display: flex;
+    align-items: stretch;
+    color: var(--text-primary-inverse);
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: -4%;
+    z-index: 0;
+    background-position: center 30%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    will-change: transform;
+    filter: saturate(0.92) brightness(0.85);
+  }
+
+  .hero__scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+      linear-gradient(180deg, rgba(18,20,15,0.55) 0%, rgba(18,20,15,0.25) 30%, rgba(18,20,15,0.5) 68%, rgba(18,20,15,0.92) 100%),
+      linear-gradient(90deg, rgba(18,20,15,0.35) 0%, transparent 40%);
+  }
+
+  /* ── Hojas: capa independiente, cae en loop continuo ── */
+  .hero__leaves {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .leaf {
+    position: absolute;
+    top: -10%;
+    left: var(--leaf-left);
+    width: var(--leaf-size);
+    height: var(--leaf-size);
+    color: color-mix(in srgb, #eae3cf 78%, transparent);
+    opacity: 0.8;
+    animation: leaf-fall var(--leaf-duration) linear infinite;
+    animation-delay: var(--leaf-delay);
+  }
+  @keyframes leaf-fall {
+    0%   { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+    8%   { opacity: 0.8; }
+    50%  { transform: translateY(55vh) translateX(var(--leaf-drift)) rotate(calc(var(--leaf-rotate) * 0.6)); }
+    92%  { opacity: 0.7; }
+    100% { transform: translateY(125vh) translateX(0) rotate(var(--leaf-rotate)); opacity: 0; }
+  }
+
+  /* ── Anillo de crecimiento decorativo ── */
+  .hero__ring {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    right: -4%;
+    width: min(30vw, 320px);
+    height: auto;
+    transform: translateY(-50%);
+    color: color-mix(in srgb, var(--accent-warm) 55%, #eae3cf 45%);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  @media (max-width: 767px) {
+    .hero__ring { display: none; }
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding-block: var(--space-lg) var(--space-md);
+  }
+
+  .hero__topline {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--text-primary-inverse) 70%, transparent);
+  }
+
+  .hero__body {
+    max-width: 62rem;
+  }
+
+  .hero__eyebrow {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-warm);
+    margin-bottom: var(--space-sm);
+  }
+
+  .hero__headline {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    font-size: clamp(2.75rem, 7.5vw, 6.75rem);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .hero__word-mask {
+    display: inline-block;
+    overflow: hidden;
+    padding-bottom: 0.1em;
+  }
+  .hero__word {
+    display: inline-block;
+  }
+
+  .hero__sub {
+    margin-top: var(--space-md);
+    max-width: 40rem;
+    font-family: var(--font-body);
+    font-size: clamp(1rem, 1.4vw, 1.25rem);
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--text-primary-inverse) 82%, transparent);
+  }
+
+  .hero__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+  }
+
+  .hero__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--text-base);
+    letter-spacing: 0.01em;
+    color: var(--text-primary-inverse);
+    text-decoration: none;
+    padding: var(--space-sm) var(--space-lg);
+    border: 1px solid color-mix(in srgb, var(--text-primary-inverse) 35%, transparent);
+    border-radius: var(--radius-full);
+    transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
+  }
+  .hero__cta:hover {
+    border-color: var(--accent-warm);
+    background-color: color-mix(in srgb, var(--accent-warm) 14%, transparent);
+  }
+  .hero__cta svg { transition: transform var(--transition-fast); }
+  .hero__cta:hover svg { transform: translateX(3px); }
+
+  .hero__scrollcue {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--text-primary-inverse) 60%, transparent);
+  }
+  .hero__scrollline {
+    display: block;
+    width: 1px;
+    height: 2rem;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--text-primary-inverse) 70%, transparent), transparent);
+  }
+
+  @media (max-width: 640px) {
+    .hero__foot { align-items: flex-start; }
+  }
+</style>

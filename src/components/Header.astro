@@ -1,0 +1,176 @@
+---
+// src/components/Header.astro
+// Chrome global del sitio. Barra mínima: logo + selector de idioma + toggle del menú
+// lateral (SideNav.astro). Lee contracts/site*.json (fuente única de marca) según `locale`.
+import siteEs from '../../contracts/site.json';
+import siteEn from '../../contracts/site.en.json';
+
+const { locale = 'es' } = Astro.props;
+const site = locale === 'en' ? siteEn : siteEs;
+const { siteName } = site.site;
+
+const altHref = locale === 'en' ? '/' : '/en/';
+const altLabel = locale === 'en' ? 'ES' : 'EN';
+const openLabel = locale === 'en' ? 'Open menu' : 'Abrir menú';
+---
+
+<header class="site-header" data-header>
+  <div class="container site-header__inner">
+    <a href={locale === 'en' ? '/en/#inicio' : '#inicio'} class="logo" aria-label={`${siteName}, ${locale === 'en' ? 'Home' : 'Inicio'}`}>
+      <img class="logo__img logo__img--light" src="/images/LOGO-LOSrOBLES-BLANCO.webp" alt={siteName} />
+      <img class="logo__img logo__img--dark" src="/images/logo-losRobles.webp" alt={siteName} />
+    </a>
+
+    <div class="site-header__actions">
+      <a href={altHref} class="lang-switch" aria-label={`${locale === 'en' ? 'Switch to Spanish' : 'Cambiar a inglés'}`}>{altLabel}</a>
+
+      <button
+        class="nav-toggle"
+        aria-label={openLabel}
+        aria-expanded="false"
+        aria-controls="sidenav"
+        data-nav-toggle
+      >
+        <span class="nav-toggle__bars"><span></span><span></span><span></span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<script>
+  const header = document.querySelector('[data-header]');
+  const toggle = document.querySelector('[data-nav-toggle]');
+
+  // Header se vuelve sólido al hacer scroll
+  if (header) {
+    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  // El estado (abierto/cerrado) lo dueño lo tiene SideNav.astro; Header solo despacha el toggle
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!open));
+      toggle.classList.toggle('is-active', !open);
+      document.dispatchEvent(new CustomEvent('sidenav:toggle'));
+    });
+
+    document.addEventListener('sidenav:closed', () => {
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.classList.remove('is-active');
+    });
+  }
+</script>
+
+<style>
+  /* Fixed (no sticky): no reserva espacio en el flujo — el Hero arranca en el y:0 real
+     de la página, "lo más arriba posible" (pedido del Ingeniero). Oculto por defecto:
+     recién se revela al primer scroll (mismo umbral que ya dispara .is-scrolled). */
+  .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: var(--z-modal);
+    background-color: transparent;
+    border-bottom: 1px solid transparent;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity var(--transition-smooth), transform var(--transition-smooth), background-color var(--transition-fast), border-color var(--transition-fast), backdrop-filter var(--transition-fast);
+  }
+
+  .site-header.is-scrolled {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    background-color: color-mix(in srgb, var(--bg-primary) 78%, transparent);
+    backdrop-filter: blur(14px);
+    border-bottom-color: color-mix(in srgb, var(--border) 40%, transparent);
+  }
+
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    padding-block: var(--space-sm);
+  }
+
+  /* ── Logo ── */
+  /* Sin scroll el header flota transparente sobre el Hero (momento oscuro, §Hero) →
+     variante blanca. Al hacer scroll, fondo claro del tema → variante de color. */
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+  .logo__img {
+    height: clamp(1.75rem, 3vw, 2.25rem);
+    width: auto;
+  }
+  .logo__img--dark { display: none; }
+  .site-header.is-scrolled .logo__img--light { display: none; }
+  .site-header.is-scrolled .logo__img--dark { display: block; }
+
+  /* ── Acciones (idioma + toggle) ── */
+  .site-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .lang-switch {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.1em;
+    color: #f2ece0;
+    text-decoration: none;
+    opacity: 0.75;
+    transition: opacity var(--transition-fast), color var(--transition-fast);
+  }
+  .lang-switch:hover { opacity: 1; }
+  .site-header.is-scrolled .lang-switch { color: var(--text-primary); }
+
+  /* ── Toggle del menú lateral ── */
+  /* Sin borde ni fondo: solo el ícono, elegante y suelto (pedido del Ingeniero) */
+  .nav-toggle {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    padding: var(--space-xs);
+    cursor: pointer;
+    transition: opacity var(--transition-fast);
+  }
+  .nav-toggle:hover {
+    opacity: 0.7;
+  }
+
+  .nav-toggle__bars {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 7px;
+    width: 28px;
+  }
+  .nav-toggle__bars span {
+    display: block;
+    height: 1px;
+    width: 100%;
+    background-color: #f2ece0;
+    transition: transform var(--transition-fast), opacity var(--transition-fast), background-color var(--transition-fast);
+    transform-origin: center;
+  }
+  .nav-toggle.is-active .nav-toggle__bars span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+  .nav-toggle.is-active .nav-toggle__bars span:nth-child(2) { opacity: 0; }
+  .nav-toggle.is-active .nav-toggle__bars span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+  /* Al hacer scroll: fondo claro del tema global → invertir a tinta oscura */
+  .site-header.is-scrolled .nav-toggle__bars span {
+    background-color: var(--text-primary);
+  }
+</style>

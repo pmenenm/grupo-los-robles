@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.DS_Store
+.astro/
+
+# Respaldos de video/imagen sin comprimir (179MB) — solo referencia local,
+# no necesarios para que el sitio funcione. Quedan en disco, fuera del repo.
+_archive-media-original/
+
+# Caché local de skills de Claude Code (regenerable desde skills-lock.json) y
+# configuración local de permisos — no es parte del sitio.
+.agents/
+.claude/settings.local.json

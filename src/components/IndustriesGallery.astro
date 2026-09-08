@@ -1,0 +1,356 @@
+---
+// src/components/IndustriesGallery.astro
+// Formato: tour numerado alternando lados (§16.3) — flujo vertical normal, sin pin ni scroll
+// horizontal. Cada división ocupa solo el alto que su contenido necesita: más legible que
+// la galería pinneada anterior, especialmente para las divisiones con más información
+// (Vestuario, Inmobiliaria). Lenis sigue dando el smooth-scroll global de la página.
+const {
+  eyebrow = '02',
+  label = 'Nuestras Divisiones',
+  // [{ id, number, name, description, image, alt, ctaLabel, ctaHref, featured?: boolean,
+  //    brands?: [{ name, locations: [], note? }], projects?: string[], gallery?: string[] }]
+  divisions = [],
+} = Astro.props;
+---
+
+<section class="industries" data-gsap-section="industries">
+  <div class="industries__label container">
+    <span class="industries__eyebrow">{eyebrow}</span>
+    <h2 class="industries__heading">{label}</h2>
+  </div>
+
+  <div class="industries__list container">
+    {divisions.map((d, i) => (
+      <article
+        class={`industries__row ${i % 2 === 1 ? 'is-reverse' : ''} ${d.featured ? 'is-featured' : ''}`}
+        id={d.id}
+        data-industries-row
+      >
+        <div class="industries__visual">
+          <div class="industries__img-frame">
+            <img class="industries__img" src={d.image} alt={d.alt} loading="lazy" data-industries-img />
+          </div>
+        </div>
+
+        <div class="industries__body" data-industries-body>
+          <h3 class="industries__name">{d.name}</h3>
+          <p class="industries__desc">{d.description}</p>
+
+          {d.brands && d.brands.length > 0 && (
+            <div class="industries__brand-carousel" data-brand-carousel>
+              <div class="industries__brand-track" data-brand-track>
+                {[...d.brands, ...d.brands].map((b) => (
+                  <div class="industries__brand-slide">
+                    {b.logo
+                      ? <img class="industries__brand-logo" src={b.logo} alt={b.name} loading="lazy" />
+                      : <span class="industries__brand-name">{b.name}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {d.projects && d.projects.length > 0 && (
+            <ul class="industries__projects" role="list">
+              {d.projects.map((p) => <li>{p}</li>)}
+            </ul>
+          )}
+
+          {d.gallery && d.gallery.length > 0 && (
+            <div class="industries__gallery">
+              {d.gallery.map((src) => <img src={src} alt="" loading="lazy" />)}
+            </div>
+          )}
+
+          {d.ctaLabel && d.ctaHref && (
+            <a class="industries__cta" href={d.ctaHref} target="_blank" rel="noopener noreferrer">
+              {d.ctaLabel} <span aria-hidden="true">↗</span>
+            </a>
+          )}
+        </div>
+      </article>
+    ))}
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  let carouselTweens = [];
+
+  function initIndustries() {
+    const rows = gsap.utils.toArray('[data-industries-row]');
+    if (!rows.length) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    rows.forEach((row) => {
+      const frame = row.querySelector('.industries__img-frame');
+      const img = row.querySelector('[data-industries-img]');
+      const body = row.querySelector('[data-industries-body]');
+
+      if (reduced) return;
+
+      const tl = gsap.timeline({
+        scrollTrigger: { trigger: row, start: 'top 78%', once: true },
+        defaults: { ease: 'expo.out', duration: 0.9 },
+      });
+
+      if (frame) tl.from(frame, { clipPath: 'inset(0 0 100% 0)', duration: 1.1, ease: 'power3.out' }, 0);
+      if (img) tl.from(img, { scale: 1.2, duration: 1.3, ease: 'power3.out' }, 0);
+      if (body) {
+        tl.from(body.children, { y: 28, opacity: 0, stagger: 0.08, duration: 0.8 }, 0.25);
+      }
+    });
+  }
+
+  function initBrandCarousels() {
+    carouselTweens.forEach((t) => t.kill());
+    carouselTweens = [];
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+
+    document.querySelectorAll('[data-brand-track]').forEach((track) => {
+      const width = track.scrollWidth / 2; // el track está duplicado (loop continuo)
+      if (!width) return;
+
+      gsap.set(track, { x: 0 });
+      const tween = gsap.to(track, {
+        x: -width,
+        ease: 'none',
+        duration: width / 40, // velocidad constante independiente de cuántas marcas haya
+        repeat: -1,
+      });
+      carouselTweens.push(tween);
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    initIndustries();
+    initBrandCarousels();
+  });
+  document.addEventListener('astro:before-swap', () => carouselTweens.forEach((t) => t.kill()));
+</script>
+
+<style>
+  .industries {
+    background-color: var(--bg-primary);
+    padding-block: var(--space-xl);
+  }
+
+  .industries__label {
+    margin-bottom: var(--space-xl);
+  }
+
+  .industries__eyebrow {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    margin-bottom: var(--space-xs);
+  }
+
+  .industries__heading {
+    font-family: var(--font-heading);
+    font-size: var(--text-h2);
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .industries__list {
+    display: grid;
+    gap: var(--space-2xl);
+  }
+
+  .industries__row {
+    display: grid;
+    gap: var(--space-lg);
+    align-items: center;
+  }
+
+  .industries__visual {
+    position: relative;
+  }
+
+  .industries__img-frame {
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    aspect-ratio: 4 / 3;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .industries__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s var(--ease-out);
+  }
+
+  .industries__row:hover .industries__img {
+    transform: scale(1.05);
+  }
+
+  .industries__body {
+    min-width: 0;
+  }
+
+  .industries__name {
+    font-family: var(--font-heading);
+    font-size: var(--text-h3);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+  }
+
+  .industries__desc {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.65;
+    color: var(--text-secondary);
+    max-width: 52ch;
+  }
+
+  .industries__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    margin-top: var(--space-md);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+    padding-bottom: 2px;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+  }
+  .industries__cta:hover {
+    color: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  /* ── Contenido enriquecido: marcas (carrusel), proyectos, mini-galería ── */
+  .industries__projects {
+    list-style: none;
+    display: grid;
+    gap: var(--space-xs);
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    max-width: 56ch;
+  }
+
+  /* Carrusel de marcas — contenido al ancho de la columna de texto, no de lado a lado
+     (overflow:hidden actúa de máscara). Se mueve de derecha a izquierda en loop continuo.
+     Placeholder tipográfico donde falta el logo oficial (nunca se reconstruyen isotipos de
+     terceros, CLAUDE.md §18). */
+  .industries__brand-carousel {
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    max-width: 56ch;
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%);
+  }
+
+  .industries__brand-track {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-md);
+    width: max-content;
+  }
+  /* Vestuario mantiene el espaciado anterior (más amplio) entre logos */
+  #vestuario .industries__brand-track {
+    gap: var(--space-xl);
+  }
+
+  .industries__brand-slide {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5em;
+    flex: none;
+  }
+
+  .industries__brand-logo {
+    height: 3.2em;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  .industries__brand-name {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    letter-spacing: 0.01em;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+  .industries__brand-locations {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.03em;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .industries__projects li {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    padding-left: 1em;
+    position: relative;
+  }
+  .industries__projects li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+
+  .industries__gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-md);
+  }
+  .industries__gallery img {
+    width: 88px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+  }
+  .industries__gallery img:hover {
+    transform: translateY(-3px) scale(1.03);
+  }
+
+  @media (min-width: 900px) {
+    .industries__row {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2xl);
+    }
+    .industries__row.is-reverse .industries__visual { order: 2; }
+    .industries__row.is-reverse .industries__body { order: 1; }
+
+    /* Protagonismo visual para divisiones destacadas (brief del Ingeniero: Gastronomía/Vestuario):
+       más columna de imagen, mismo tamaño de título que el resto de las divisiones —
+       todos los H3 del sitio miden lo mismo (--text-h3), sin variante "destacada". */
+    .industries__row.is-featured {
+      grid-template-columns: 1.3fr 1fr;
+    }
+    .industries__row.is-featured .industries__img-frame {
+      aspect-ratio: 5 / 4;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .industries__img { transition: none; }
+  }
+</style>

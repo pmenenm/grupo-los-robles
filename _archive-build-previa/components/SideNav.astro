@@ -1,0 +1,261 @@
+---
+// src/components/SideNav.astro
+// Menú lateral de alto nivel — reemplaza el nav horizontal + overlay móvil.
+// Se abre/cierra vía CustomEvent 'sidenav:toggle' despachado por Header.astro.
+import site from '../../contracts/site.json';
+
+const nav = site.navigation ?? [];
+const brands = site.footerLinks ?? [];
+const social = site.social ?? [];
+const orderUrl = site.orderUrl ?? '#';
+
+const pad = (n) => String(n).padStart(2, '0');
+---
+
+<div class="sidenav" id="sidenav" data-sidenav hidden aria-hidden="true">
+  <div class="sidenav__scrim" data-sidenav-scrim></div>
+
+  <aside class="sidenav__panel" role="dialog" aria-modal="true" aria-label="Menú principal">
+    <button class="sidenav__close" data-sidenav-close aria-label="Cerrar menú">
+      <span></span><span></span>
+    </button>
+
+    <nav class="sidenav__nav" aria-label="Navegación principal">
+      <ul role="list">
+        {nav.map((item, i) => (
+          <li>
+            <a href={item.href} data-sidenav-link>
+              <span class="sidenav__num">{pad(i + 1)}</span>
+              <span class="sidenav__label">{item.label}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="sidenav__foot">
+      {brands.length > 0 && (
+        <div class="sidenav__group">
+          <h3>Nuestras Marcas</h3>
+          <ul role="list">
+            {brands.map((b) => (
+              <li><a href={b.href} target="_blank" rel="noopener noreferrer">{b.label}</a></li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div class="sidenav__foot-row">
+        {social.length > 0 && (
+          <ul class="sidenav__social" role="list">
+            {social.map((s) => (
+              <li><a href={s.href} target="_blank" rel="noopener noreferrer">{s.label}</a></li>
+            ))}
+          </ul>
+        )}
+        <a href={orderUrl} class="sidenav__cta" data-sidenav-link>Contáctanos →</a>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+  import { gsap } from 'gsap';
+
+  function initSideNav() {
+    const root = document.querySelector('[data-sidenav]');
+    const scrim = document.querySelector('[data-sidenav-scrim]');
+    const closeBtn = document.querySelector('[data-sidenav-close]');
+    const links = document.querySelectorAll('[data-sidenav-link]');
+    const panel = document.querySelector('.sidenav__panel');
+    if (!root || !panel) return;
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let isOpen = false;
+
+    const open = () => {
+      if (isOpen) return;
+      isOpen = true;
+      root.hidden = false;
+      root.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => root.classList.add('is-open'));
+
+      if (!reduced) {
+        const items = panel.querySelectorAll('.sidenav__nav li');
+        gsap.fromTo(
+          items,
+          { y: 24, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, ease: 'expo.out', stagger: 0.05, delay: 0.15 }
+        );
+      }
+    };
+
+    const close = () => {
+      if (!isOpen) return;
+      isOpen = false;
+      root.classList.remove('is-open');
+      root.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      document.dispatchEvent(new CustomEvent('sidenav:closed'));
+      const done = () => { root.hidden = true; };
+      if (reduced) done();
+      else setTimeout(done, 500);
+    };
+
+    scrim?.addEventListener('click', close);
+    closeBtn?.addEventListener('click', close);
+    links.forEach((a) => a.addEventListener('click', close));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    document.addEventListener('sidenav:toggle', () => (isOpen ? close() : open()));
+    document.addEventListener('astro:before-swap', () => { document.body.style.overflow = ''; }, { once: true });
+  }
+
+  document.addEventListener('astro:page-load', initSideNav);
+</script>
+
+<style>
+  .sidenav {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+  }
+  .sidenav[hidden] { display: none; }
+
+  .sidenav__scrim {
+    position: absolute;
+    inset: 0;
+    background-color: color-mix(in srgb, var(--text-primary) 35%, transparent);
+    opacity: 0;
+    transition: opacity 0.4s var(--ease-out);
+  }
+  .sidenav.is-open .sidenav__scrim { opacity: 1; }
+
+  .sidenav__panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: min(420px, 88vw);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--space-lg) var(--space-lg);
+    background-color: color-mix(in srgb, var(--bg-primary) 92%, transparent);
+    backdrop-filter: blur(18px);
+    border-left: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    transform: translateX(100%);
+    transition: transform 0.5s var(--ease-expo);
+  }
+  .sidenav.is-open .sidenav__panel { transform: translateX(0); }
+
+  .sidenav__close {
+    align-self: flex-end;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+  }
+  .sidenav__close span {
+    display: block;
+    width: 16px;
+    height: 1px;
+    background-color: var(--text-primary);
+  }
+  .sidenav__close span:first-child { transform: translateY(3px) rotate(45deg); }
+  .sidenav__close span:last-child { transform: translateY(-3px) rotate(-45deg); }
+
+  .sidenav__nav {
+    margin-top: var(--space-lg);
+  }
+  .sidenav__nav ul { list-style: none; display: grid; gap: var(--space-xs); }
+  .sidenav__nav a {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-sm);
+    padding-block: var(--space-xs);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    transition: gap var(--transition-fast);
+  }
+  .sidenav__nav a:hover { gap: var(--space-md); }
+  .sidenav__nav a:hover .sidenav__label { color: var(--accent); }
+
+  .sidenav__num {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+  .sidenav__label {
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    transition: color var(--transition-fast);
+  }
+
+  .sidenav__foot {
+    display: grid;
+    gap: var(--space-md);
+  }
+  .sidenav__group h3 {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+  }
+  .sidenav__group ul { list-style: none; display: grid; gap: 4px; }
+  .sidenav__group a {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  .sidenav__group a:hover { color: var(--accent); }
+
+  .sidenav__foot-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--border);
+  }
+
+  .sidenav__social { list-style: none; display: flex; gap: var(--space-sm); }
+  .sidenav__social a {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  .sidenav__social a:hover { color: var(--accent); }
+
+  .sidenav__cta {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .sidenav__cta:hover { color: var(--accent-hover); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sidenav__panel, .sidenav__scrim { transition: opacity 0.2s linear; transform: none; }
+  }
+
+  @media (max-width: 420px) {
+    .sidenav__panel { width: 100vw; }
+  }
+</style>

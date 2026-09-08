@@ -1,0 +1,149 @@
+---
+// src/components/Header.astro
+// Chrome global del sitio. Barra mínima: logo + toggle del menú lateral (SideNav.astro).
+// Lee contracts/site.json (fuente única de marca).
+import site from '../../contracts/site.json';
+
+const { siteName } = site.site;
+---
+
+<header class="site-header" data-header>
+  <div class="container site-header__inner">
+    <a href="#inicio" class="logo" aria-label={`${siteName} — Inicio`}>
+      <img class="logo__img logo__img--light" src="/images/LOGO-LOSrOBLES-BLANCO.webp" alt={siteName} />
+      <img class="logo__img logo__img--dark" src="/images/logo-losRobles.webp" alt={siteName} />
+    </a>
+
+    <button
+      class="nav-toggle"
+      aria-label="Abrir menú"
+      aria-expanded="false"
+      aria-controls="sidenav"
+      data-nav-toggle
+    >
+      <span class="nav-toggle__bars"><span></span><span></span></span>
+      <span class="nav-toggle__label">Menú</span>
+    </button>
+  </div>
+</header>
+
+<script>
+  const header = document.querySelector('[data-header]');
+  const toggle = document.querySelector('[data-nav-toggle]');
+
+  // Header se vuelve sólido al hacer scroll
+  if (header) {
+    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  // El estado (abierto/cerrado) lo dueño lo tiene SideNav.astro; Header solo despacha el toggle
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!open));
+      toggle.classList.toggle('is-active', !open);
+      document.dispatchEvent(new CustomEvent('sidenav:toggle'));
+    });
+
+    document.addEventListener('sidenav:closed', () => {
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.classList.remove('is-active');
+    });
+  }
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-modal);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), backdrop-filter var(--transition-fast);
+    background-color: transparent;
+    border-bottom: 1px solid transparent;
+  }
+
+  .site-header.is-scrolled {
+    background-color: color-mix(in srgb, var(--bg-primary) 78%, transparent);
+    backdrop-filter: blur(14px);
+    border-bottom-color: color-mix(in srgb, var(--border) 40%, transparent);
+  }
+
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    padding-block: var(--space-sm);
+  }
+
+  /* ── Logo ── */
+  /* Sin scroll el header flota transparente sobre el Hero (momento oscuro, §Hero) →
+     variante blanca. Al hacer scroll, fondo claro del tema → variante de color. */
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+  .logo__img {
+    height: clamp(1.75rem, 3vw, 2.25rem);
+    width: auto;
+  }
+  .logo__img--dark { display: none; }
+  .site-header.is-scrolled .logo__img--light { display: none; }
+  .site-header.is-scrolled .logo__img--dark { display: block; }
+
+  /* ── Toggle del menú lateral ── */
+  .nav-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background: none;
+    border: 1px solid color-mix(in srgb, #f2ece0 35%, transparent);
+    border-radius: var(--radius-full);
+    padding: var(--space-xs) var(--space-md);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), transform var(--transition-fast);
+  }
+  .nav-toggle:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .nav-toggle__bars {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 18px;
+  }
+  .nav-toggle__bars span {
+    display: block;
+    height: 1px;
+    width: 100%;
+    background-color: #f2ece0;
+    transition: transform var(--transition-fast), opacity var(--transition-fast), background-color var(--transition-fast);
+  }
+  .nav-toggle.is-active .nav-toggle__bars span:first-child { transform: translateY(3px) rotate(45deg); }
+  .nav-toggle.is-active .nav-toggle__bars span:last-child { transform: translateY(-3px) rotate(-45deg); }
+
+  .nav-toggle__label {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.04em;
+    color: #f2ece0;
+    transition: color var(--transition-fast);
+  }
+
+  /* Al hacer scroll: fondo claro del tema global → invertir a tinta oscura */
+  .site-header.is-scrolled .nav-toggle {
+    border-color: var(--border);
+  }
+  .site-header.is-scrolled .nav-toggle__bars span {
+    background-color: var(--text-primary);
+  }
+  .site-header.is-scrolled .nav-toggle__label {
+    color: var(--text-primary);
+  }
+</style>

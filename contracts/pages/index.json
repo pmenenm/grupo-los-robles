@@ -1,0 +1,179 @@
+{
+  "_comment": "Landing home — Kaizen Sushi (Santiago). Delivery premium + catering corporativo.",
+  "page_type": "landing",
+  "seo": {
+    "title": "Kaizen Sushi — Sushi Premium y Catering en Santiago",
+    "description": "Sushi premium hecho a mano en Santiago. Pide delivery en minutos o cotiza catering para tu empresa. Ingredientes frescos, oficio japonés real.",
+    "ogImage": "/images/hero-bg.jpg",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap",
+    "schemaData": {
+      "@context": "https://schema.org",
+      "@type": "Restaurant",
+      "name": "Kaizen Sushi",
+      "image": "https://kaizensushi.cl/images/hero-bg.jpg",
+      "url": "https://kaizensushi.cl",
+      "telephone": "+56 9 0000 0000",
+      "email": "hola@kaizensushi.cl",
+      "servesCuisine": "Japanese",
+      "priceRange": "$$$",
+      "acceptsReservations": "True",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Santiago",
+        "addressCountry": "CL"
+      },
+      "menu": "https://wa.me/56900000000"
+    }
+  },
+  "hero": {
+    "headline": "Alta cocina japonesa, entregada con precisión",
+    "subheadline": "Sushi premium hecho a mano en Santiago. Delivery impecable y catering para eventos y empresas que buscan dejar huella.",
+    "ctaText": "Pedir ahora",
+    "ctaHref": "https://wa.me/56900000000",
+    "ctaSecondaryText": "Cotizar catering",
+    "ctaSecondaryHref": "https://wa.me/56900000000?text=Hola%2C%20quiero%20cotizar%20catering%20para%20un%20evento",
+    "backgroundImage": "/images/hero-bg.jpg"
+  },
+  "sections": [
+    {
+      "type": "features",
+      "content": {
+        "title": "Kaizen a tu manera",
+        "subtitle": "Elige cómo quieres vivir la experiencia Kaizen — cada plato mantiene el mismo estándar de origen.",
+        "items": [
+          {
+            "icon": "<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M21 8l-9-5-9 5 9 5 9-5z'/><path d='M3 8v8l9 5 9-5V8'/><path d='M12 13v8'/></svg>",
+            "title": "Delivery premium",
+            "description": "Pedidos online con empaques que preservan la temperatura y presentación de cada pieza hasta tu puerta."
+          },
+          {
+            "icon": "<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2'/><circle cx='10' cy='7' r='4'/><path d='M23 21v-2a4 4 0 0 0-3-3.87'/><path d='M16 3.13a4 4 0 0 1 0 7.75'/></svg>",
+            "title": "Catering para empresas",
+            "description": "Menús a medida para reuniones, lanzamientos y eventos corporativos, con logística propia."
+          },
+          {
+            "icon": "<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6.5 12c0-3 3-6 8-6 3 0 5.5 2 6.5 6-1 4-3.5 6-6.5 6-5 0-8-3-8-6z'/><path d='M2 12l4.5-3v6L2 12z'/><circle cx='15' cy='10' r='0.6' fill='currentColor'/></svg>",
+            "title": "Ingredientes de origen",
+            "description": "Pescado seleccionado a diario y arroz sazonado en casa, sin atajos ni congelados de relleno."
+          },
+          {
+            "icon": "<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M4 20L16 8a2.5 2.5 0 0 0-3.5-3.5L4 12.5'/><path d='M4 12.5V20h7.5'/></svg>",
+            "title": "Chefs con oficio",
+            "description": "Itamaes formados en técnica tradicional japonesa, cortando cada pieza al momento del pedido."
+          }
+        ]
+      }
+    },
+    {
+      "type": "gallery",
+      "content": {
+        "title": "Oficio, no atajos",
+        "subtitle": "Lo que no se ve en la foto del menú: el proceso detrás de cada pedido.",
+        "items": [
+          {
+            "image": "/images/nigiri-detail.jpg",
+            "alt": "Primer plano de piezas de nigiri premium recién preparadas",
+            "label": "01 — Producto",
+            "caption": "Cada nigiri se forma a mano, pieza por pieza, con el balance exacto entre arroz y pescado."
+          },
+          {
+            "image": "/images/chef-prep.jpg",
+            "alt": "Chef preparando sushi con técnica tradicional japonesa",
+            "label": "02 — Técnica",
+            "caption": "Itamaes formados en el corte tradicional japonés, fieles al oficio del yanagiba."
+          },
+          {
+            "image": "/images/catering-table.jpg",
+            "alt": "Mesa de catering premium servida para un evento corporativo",
+            "label": "03 — Eventos",
+            "caption": "El mismo estándar Kaizen, escalado para tu próximo evento corporativo."
+          }
+        ]
+      }
+    },
+    {
+      "type": "testimonials",
+      "content": {
+        "title": "Lo que dicen quienes ya pidieron",
+        "items": [
+          {
+            "quote": "Pedimos delivery para una reunión de directorio y llegó impecable, como si acabara de salir de la barra.",
+            "author": "Javiera R.",
+            "role": "Cliente frecuente"
+          },
+          {
+            "quote": "El catering de Kaizen fue el mejor comentario de nuestro evento de fin de año. Cero quejas, puro elogio.",
+            "author": "Equipo de RRHH",
+            "role": "Empresa cliente"
+          },
+          {
+            "quote": "Se nota la diferencia cuando el pescado es de verdad fresco. Ahora es nuestro delivery de confianza.",
+            "author": "Tomás V.",
+            "role": "Cliente frecuente"
+          }
+        ]
+      }
+    },
+    {
+      "type": "faq",
+      "content": {
+        "title": "Antes de pedir",
+        "items": [
+          {
+            "question": "¿Cómo hago un pedido de delivery?",
+            "answer": "Escríbenos directo por WhatsApp con el botón \"Pedir ahora\" — te confirmamos el menú disponible, el tiempo de entrega y el total antes de despachar."
+          },
+          {
+            "question": "¿Con cuánta anticipación debo reservar catering?",
+            "answer": "Recomendamos coordinar eventos corporativos con al menos 48 horas de anticipación para asegurar disponibilidad de nuestro equipo y la frescura del producto."
+          },
+          {
+            "question": "¿Hacen despacho fuera de Santiago?",
+            "answer": "Por ahora cubrimos comunas de Santiago. Escríbenos tu dirección por WhatsApp y confirmamos cobertura antes de tomar el pedido."
+          },
+          {
+            "question": "¿Tienen opciones sin pescado crudo o vegetarianas?",
+            "answer": "Sí, contamos con rolls vegetarianos y opciones cocidas — cuéntanos tus preferencias al pedir y armamos la selección contigo."
+          }
+        ]
+      }
+    },
+    {
+      "type": "cta",
+      "content": {
+        "headline": "Tu próximo pedido, al nivel Kaizen",
+        "subtext": "Delivery premium para hoy o catering para tu próximo evento — un mensaje y lo coordinamos.",
+        "ctaText": "Pedir por WhatsApp",
+        "ctaHref": "https://wa.me/56900000000"
+      }
+    }
+  ],
+  "media": {
+    "images": [
+      {
+        "slot": "hero-bg",
+        "prompt": "Overhead top-down shot of an exquisite platter of premium sushi and sashimi arranged on black slate, dramatic single-source side lighting casting long shadows, glistening fresh fish, minimalist Japanese fine-dining aesthetic, shallow depth of field, cinematic food photography, dark moody background",
+        "alt": "Vista cenital de una selección de sushi premium con iluminación dramática",
+        "path": "/images/hero-bg.jpg"
+      },
+      {
+        "slot": "nigiri-detail",
+        "prompt": "Extreme close-up of three pieces of nigiri sushi (salmon, tuna, sea urchin) glistening under dramatic side light, dark textured background, shallow depth of field, michelin-star food photography, premium Japanese restaurant",
+        "alt": "Primer plano de piezas de nigiri premium recién preparadas",
+        "path": "/images/nigiri-detail.jpg"
+      },
+      {
+        "slot": "chef-prep",
+        "prompt": "Japanese sushi chef's hands precisely slicing fresh tuna with a traditional yanagiba knife, dramatic low-key lighting, dark restaurant kitchen background, cinematic close-up, sense of mastery and craftsmanship",
+        "alt": "Chef preparando sushi con técnica tradicional japonesa",
+        "path": "/images/chef-prep.jpg"
+      },
+      {
+        "slot": "catering-table",
+        "prompt": "Elegant catering table spread for a corporate event with premium sushi platters, minimalist Japanese styling, dark ambient lighting with warm highlights, shallow depth of field, upscale event photography",
+        "alt": "Mesa de catering premium servida para un evento corporativo",
+        "path": "/images/catering-table.jpg"
+      }
+    ]
+  }
+}

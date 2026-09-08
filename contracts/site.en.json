@@ -1,0 +1,54 @@
+{
+  "_comment": "English mirror of site.json — same brand data (proper nouns unchanged), navigation/tagline/description translated. Keep in sync with site.json.",
+  "contract_type": "site",
+  "site": {
+    "domain": "https://grupolosrobles.com",
+    "siteName": "Grupo Los Robles",
+    "tagline": "20+ years turning ideas into solid realities",
+    "language": "en",
+    "defaultOgImage": "/images/2sector-gastro.webp"
+  },
+  "company": {
+    "legalName": "Grupo Los Robles",
+    "email": "",
+    "phone": "",
+    "address": ""
+  },
+  "orderUrl": "#contacto",
+  "navigation": [
+    { "label": "Home",                  "href": "#inicio" },
+    { "label": "Gastronomy",            "href": "#gastronomia" },
+    { "label": "Apparel Retail",        "href": "#vestuario" },
+    { "label": "Agriculture",           "href": "#agricola" },
+    { "label": "Technology Solutions",  "href": "#tecnologia" },
+    { "label": "Real Estate",           "href": "#inmobiliaria" },
+    { "label": "Contact",               "href": "#contacto" }
+  ],
+  "footerLinks": [
+    { "label": "Dot Solutions",     "href": "https://dotsolutions.io" },
+    { "label": "Grupo Mil Sabores", "href": "https://grupomilsabores.cl" },
+    { "label": "Valbifrut",         "href": "https://valbifrut.cl" }
+  ],
+  "social": [
+    { "label": "LinkedIn", "href": "https://www.linkedin.com/company/grupolosrobles/" }
+  ],
+  "theme": {
+    "--bg-primary":     "#FDFCFA",
+    "--bg-secondary":   "#F1EBE1",
+    "--text-primary":   "#14130F",
+    "--text-secondary": "#6B6559",
+    "--accent":         "#777162",
+    "--accent-hover":   "#5C5749",
+    "--border":         "#E4DDD0",
+    "--font-heading":   "'Playfair Display', serif",
+    "--font-body":      "'Inter', sans-serif"
+  },
+  "organizationSchema": {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Grupo Los Robles",
+    "url": "https://grupolosrobles.com",
+    "logo": "https://grupolosrobles.com/images/logo-losRobles.webp",
+    "description": "A Chilean holding with more than 20 years of trajectory in Gastronomy, Apparel Retail, Agriculture, Technology Solutions and Real Estate."
+  }
+}

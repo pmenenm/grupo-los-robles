@@ -1,0 +1,308 @@
+---
+// src/components/IndustriesGallery.astro
+// Formato: tour numerado alternando lados (§16.3) — flujo vertical normal, sin pin ni scroll
+// horizontal. Cada división ocupa solo el alto que su contenido necesita: más legible que
+// la galería pinneada anterior, especialmente para las divisiones con más información
+// (Vestuario, Inmobiliaria). Lenis sigue dando el smooth-scroll global de la página.
+const {
+  label = 'Nuestras Divisiones',
+  // [{ id, number, name, description, image, alt, ctaLabel, ctaHref,
+  //    brands?: [{ name, locations: [], note? }], projects?: string[], gallery?: string[] }]
+  divisions = [],
+} = Astro.props;
+---
+
+<section class="industries" data-gsap-section="industries">
+  <div class="industries__label container">
+    <span class="industries__eyebrow">02 —</span>
+    <h2 class="industries__heading">{label}</h2>
+  </div>
+
+  <div class="industries__list container">
+    {divisions.map((d, i) => (
+      <article
+        class={`industries__row ${i % 2 === 1 ? 'is-reverse' : ''}`}
+        id={d.id}
+        data-industries-row
+      >
+        <div class="industries__visual">
+          <span class="industries__row-num" aria-hidden="true">{d.number}</span>
+          <div class="industries__img-frame">
+            <img class="industries__img" src={d.image} alt={d.alt} loading="lazy" data-industries-img />
+          </div>
+        </div>
+
+        <div class="industries__body" data-industries-body>
+          <span class="industries__num">{d.number} —</span>
+          <h3 class="industries__name">{d.name}</h3>
+          <p class="industries__desc">{d.description}</p>
+
+          {d.brands && d.brands.length > 0 && (
+            <ul class="industries__brands" role="list">
+              {d.brands.map((b) => (
+                <li>
+                  <span class="industries__brand-name">{b.name}</span>
+                  <span class="industries__brand-locations">
+                    {b.locations.join(' · ')}{b.note ? ` · ${b.note}` : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {d.projects && d.projects.length > 0 && (
+            <ul class="industries__projects" role="list">
+              {d.projects.map((p) => <li>{p}</li>)}
+            </ul>
+          )}
+
+          {d.gallery && d.gallery.length > 0 && (
+            <div class="industries__gallery">
+              {d.gallery.map((src) => <img src={src} alt="" loading="lazy" />)}
+            </div>
+          )}
+
+          {d.ctaLabel && d.ctaHref && (
+            <a class="industries__cta" href={d.ctaHref} target="_blank" rel="noopener noreferrer">
+              {d.ctaLabel} <span aria-hidden="true">↗</span>
+            </a>
+          )}
+        </div>
+      </article>
+    ))}
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  function initIndustries() {
+    const rows = gsap.utils.toArray('[data-industries-row]');
+    if (!rows.length) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    rows.forEach((row) => {
+      const frame = row.querySelector('.industries__img-frame');
+      const img = row.querySelector('[data-industries-img]');
+      const body = row.querySelector('[data-industries-body]');
+      const rowNum = row.querySelector('.industries__row-num');
+
+      if (reduced) return;
+
+      const tl = gsap.timeline({
+        scrollTrigger: { trigger: row, start: 'top 78%', once: true },
+        defaults: { ease: 'expo.out', duration: 0.9 },
+      });
+
+      if (frame) tl.from(frame, { clipPath: 'inset(0 0 100% 0)', duration: 1.1, ease: 'power3.out' }, 0);
+      if (img) tl.from(img, { scale: 1.2, duration: 1.3, ease: 'power3.out' }, 0);
+      if (rowNum) tl.from(rowNum, { opacity: 0, x: -16, duration: 0.7 }, 0.2);
+      if (body) {
+        tl.from(body.children, { y: 28, opacity: 0, stagger: 0.08, duration: 0.8 }, 0.25);
+      }
+    });
+  }
+
+  document.addEventListener('astro:page-load', initIndustries);
+</script>
+
+<style>
+  .industries {
+    background-color: var(--bg-primary);
+    padding-block: var(--space-xl);
+  }
+
+  .industries__label {
+    margin-bottom: var(--space-xl);
+  }
+
+  .industries__eyebrow {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    margin-bottom: var(--space-xs);
+  }
+
+  .industries__heading {
+    font-family: var(--font-heading);
+    font-size: clamp(1.75rem, 4vw, 3rem);
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .industries__list {
+    display: grid;
+    gap: var(--space-2xl);
+  }
+
+  .industries__row {
+    display: grid;
+    gap: var(--space-lg);
+    align-items: center;
+  }
+
+  .industries__visual {
+    position: relative;
+  }
+
+  .industries__row-num {
+    position: absolute;
+    top: -0.3em;
+    left: -0.05em;
+    z-index: 2;
+    font-family: var(--font-heading);
+    font-size: clamp(3rem, 9vw, 6rem);
+    line-height: 1;
+    color: var(--bg-primary);
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--text-primary) 45%, transparent);
+    pointer-events: none;
+  }
+
+  .industries__img-frame {
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    aspect-ratio: 4 / 3;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .industries__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s var(--ease-out);
+  }
+
+  .industries__row:hover .industries__img {
+    transform: scale(1.05);
+  }
+
+  .industries__body {
+    min-width: 0;
+  }
+
+  .industries__num {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--text-lg);
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: var(--space-xs);
+  }
+
+  .industries__name {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 4.5vw, 3.25rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+  }
+
+  .industries__desc {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.65;
+    color: var(--text-secondary);
+    max-width: 52ch;
+  }
+
+  .industries__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    margin-top: var(--space-md);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+    padding-bottom: 2px;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+  }
+  .industries__cta:hover {
+    color: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  /* ── Contenido enriquecido: marcas, proyectos, mini-galería (Vestuario/Inmobiliaria) ── */
+  .industries__brands,
+  .industries__projects {
+    list-style: none;
+    display: grid;
+    gap: var(--space-xs);
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    max-width: 56ch;
+  }
+
+  .industries__brands li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5em;
+  }
+  .industries__brand-name {
+    font-family: var(--font-heading);
+    font-size: var(--text-base);
+    color: var(--text-primary);
+  }
+  .industries__brand-locations {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.03em;
+    color: var(--text-secondary);
+  }
+
+  .industries__projects li {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    padding-left: 1em;
+    position: relative;
+  }
+  .industries__projects li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+
+  .industries__gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-md);
+  }
+  .industries__gallery img {
+    width: 88px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+  }
+  .industries__gallery img:hover {
+    transform: translateY(-3px) scale(1.03);
+  }
+
+  @media (min-width: 900px) {
+    .industries__row {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2xl);
+    }
+    .industries__row.is-reverse .industries__visual { order: 2; }
+    .industries__row.is-reverse .industries__body { order: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .industries__img { transition: none; }
+  }
+</style>

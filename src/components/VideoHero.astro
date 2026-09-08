@@ -1,0 +1,183 @@
+---
+// src/components/VideoHero.astro
+// Hero con video de fondo fijo (sticky) + panel glassmorphism que sube por encima al hacer
+// scroll, revelando texto + CTA. Mismo truco de "fondo sticky + margen negativo" que ya usa
+// ContactReveal.astro (bg pinneado con position:sticky mientras el foreground, más alto,
+// scrollea encima) — no es un patrón nuevo en el proyecto, solo aplicado a un video.
+const {
+  videoSrc = '/videoHOME.mp4',
+  poster = '/images/lujo-silencioso/division-gastronomia.jpg',
+  text = 'Líderes en el sector gastronómico, nuestra meta principal es ofrecer siempre una experiencia única, con la mejor calidad y un servicio inmejorable.',
+  ctaText = 'descubre mil sabores',
+  ctaHref = 'https://grupomilsabores.cl/',
+} = Astro.props;
+---
+
+<section class="vhero" data-gsap-section="video-hero">
+  <div class="vhero__bg" aria-hidden="true">
+    <video
+      class="vhero__video"
+      src={videoSrc}
+      poster={poster}
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+    ></video>
+  </div>
+
+  <div class="vhero__fg">
+    <div class="vhero__spacer" aria-hidden="true"></div>
+
+    <div class="vhero__panel" data-vhero-panel>
+      <p class="vhero__text">{text}</p>
+      <a
+        href={ctaHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="vhero__link"
+      >
+        {ctaText}
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  function initVideoHero() {
+    const panel = document.querySelector<HTMLElement>('[data-vhero-panel]');
+    const video = document.querySelector<HTMLVideoElement>('.vhero__video');
+    if (!panel) return;
+
+    if (video) {
+      // Pausar el video fuera de viewport (mismo criterio que ShaderField.astro para
+      // no gastar batería/CPU con motion invisible).
+      const io = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) video.play().catch(() => {});
+        else video.pause();
+      }, { threshold: 0 });
+      io.observe(video);
+    }
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    gsap.from(panel, {
+      opacity: 0,
+      y: 40,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: panel,
+        start: 'top 95%',
+        end: 'top 40%',
+        scrub: 0.6,
+      },
+    });
+  }
+
+  document.addEventListener('astro:page-load', initVideoHero);
+</script>
+
+<style>
+  .vhero {
+    position: relative;
+  }
+
+  .vhero__bg {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .vhero__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .vhero__fg {
+    position: relative;
+    z-index: 1;
+    margin-top: -100svh;
+  }
+
+  /* Deja el video visible, sin nada superpuesto, durante el primer tramo de scroll */
+  .vhero__spacer {
+    height: 100svh;
+  }
+
+  .vhero__panel {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: var(--space-md);
+    padding: var(--space-xl) var(--space-md);
+
+    /* Glassmorphism: blur fuerte + fondo oscuro muy sutilmente transparente, para que el
+       video se siga intuyendo detrás mientras el texto queda legible. */
+    background-color: color-mix(in srgb, var(--bg-primary-inverse) 32%, transparent);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+  }
+
+  .vhero__text {
+    font-family: var(--font-heading);
+    font-size: var(--text-h2);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--text-primary-inverse);
+    text-wrap: balance;
+    max-width: 26ch;
+    text-shadow: 0 1px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Anti-botón: sin fondo ni borde, solo subrayado — el "encendido" ocurre en :hover */
+  .vhero__link {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    letter-spacing: 0.02em;
+    color: var(--text-primary-inverse);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    background: none;
+    border: none;
+    padding: 0;
+    transition: transform var(--transition-fast), text-shadow var(--transition-fast), color var(--transition-fast);
+  }
+  .vhero__link:hover,
+  .vhero__link:focus-visible {
+    transform: scale(1.05);
+    color: var(--text-primary-inverse);
+    text-shadow:
+      0 0 12px var(--brand-green),
+      0 0 28px var(--brand-green);
+  }
+
+  @media (max-width: 600px) {
+    /* backdrop-filter sobre un <video> en reproducción es costoso — se reduce en mobile
+       para no comprometer el rendimiento (regla del proyecto: Lighthouse >= 90). */
+    .vhero__panel {
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .vhero__text {
+      max-width: 32ch;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vhero__bg { position: relative; height: auto; min-height: 60svh; }
+    .vhero__fg { margin-top: 0; }
+    .vhero__spacer { display: none; }
+  }
+</style>

@@ -1,0 +1,160 @@
+---
+// src/components/ManifestoSection.astro
+// Formato: momento de marca — sección invertida a modo oscuro con shader WebGL iridiscente
+// (§17, "un momento fuerte por página") + franja editorial con reveal de líneas (SplitText + scrub).
+import ShaderField from './ShaderField.astro';
+
+const {
+  eyebrow = '03 —',
+  lines = [], // array de strings, cada uno se revela como su propia línea
+  lineAsset = '/images/nosotros-linea.webp',
+  verticalLabel = 'Grupo Los Robles',
+} = Astro.props;
+---
+
+<section class="manifesto" data-gsap-section="manifesto">
+  <ShaderField class="manifesto__shaderfield" />
+  <img class="manifesto__line" src={lineAsset} alt="" aria-hidden="true" loading="lazy" />
+  <span class="manifesto__vertical" aria-hidden="true">{verticalLabel}</span>
+
+  <div class="container manifesto__inner">
+    <span class="manifesto__eyebrow">{eyebrow}</span>
+    <p class="manifesto__text" data-manifesto-text>
+      {lines.join(' ')}
+    </p>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { SplitText } from 'gsap/SplitText';
+  gsap.registerPlugin(ScrollTrigger, SplitText);
+
+  let split;
+
+  function initManifesto() {
+    split?.revert();
+    const section = document.querySelector('[data-gsap-section="manifesto"]');
+    const textEl = document.querySelector('[data-manifesto-text]');
+    if (!section || !textEl) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    split = SplitText.create(textEl, {
+      type: 'lines',
+      mask: 'lines',
+      autoSplit: true,
+      onSplit(self) {
+        return gsap.from(self.lines, {
+          opacity: 0.15,
+          filter: 'blur(6px)',
+          yPercent: 30,
+          stagger: 0.15,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 75%',
+            end: 'bottom 60%',
+            scrub: 0.6,
+          },
+        });
+      },
+    });
+  }
+
+  document.addEventListener('astro:page-load', initManifesto);
+  document.addEventListener('astro:before-swap', () => split?.revert());
+</script>
+
+<style>
+  .manifesto {
+    /* Sección invertida a modo oscuro — solo aquí, no afecta el contrato global del tema */
+    --bg-primary: #16130d;
+    --bg-secondary: #241f16;
+    --text-primary: #f2ece0;
+    --text-secondary: #b8ab95;
+    --accent: #c9a15c;
+    --accent-hover: #dbb572;
+    --border: #3a3222;
+
+    position: relative;
+    overflow: hidden;
+    padding-block: var(--space-2xl);
+    background-color: var(--bg-primary);
+    color-scheme: dark;
+  }
+
+  .manifesto :global(.manifesto__shaderfield) {
+    z-index: 0;
+  }
+
+  /* Grain sutil sobre el shader para textura premium */
+  .manifesto::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .manifesto__line {
+    position: absolute;
+    right: -4%;
+    bottom: -8%;
+    width: min(42vw, 480px);
+    opacity: 0.35;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .manifesto__inner {
+    position: relative;
+    z-index: 1;
+    max-width: 920px;
+  }
+
+  /* Texto vertical decorativo — técnica de layout no genérico (§15.5) */
+  .manifesto__vertical {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .manifesto__vertical {
+      display: block;
+      position: absolute;
+      z-index: 1;
+      left: var(--space-sm);
+      top: 50%;
+      transform: translateY(-50%) rotate(180deg);
+      writing-mode: vertical-rl;
+      font-family: var(--font-body);
+      font-size: var(--text-xs);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--text-primary) 40%, transparent);
+      pointer-events: none;
+      user-select: none;
+    }
+  }
+
+  .manifesto__eyebrow {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    margin-bottom: var(--space-md);
+  }
+
+  .manifesto__text {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 5.5vw, 4rem);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    text-wrap: balance;
+  }
+</style>

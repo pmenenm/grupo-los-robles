@@ -1,0 +1,264 @@
+<title>Vitrina Los Robles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE8DC;
+    --paper-raised:#F8F5EC;
+    --ink:#201F1A;
+    --ink-soft:#5B5749;
+    --ink-faint:#8A8474;
+    --rule:#D6CDB8;
+    --accent:#7C4A2D;
+    --accent-ink:#5C3821;
+    --accent-soft:#E6D6BE;
+    --flag:#A13B2E;
+    --flag-soft:#F1DAD2;
+    --evergreen:#2F4A34;
+    --evergreen-soft:#DEE6DC;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#18160F; --paper-raised:#211E15; --ink:#ECE6D6; --ink-soft:#B8AF98; --ink-faint:#847D68;
+      --rule:#3A3527; --accent:#D19A67; --accent-ink:#E8C69C; --accent-soft:#3A2C1C;
+      --flag:#E08772; --flag-soft:#3B241F; --evergreen:#8FBB9A; --evergreen-soft:#233129;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#18160F; --paper-raised:#211E15; --ink:#ECE6D6; --ink-soft:#B8AF98; --ink-faint:#847D68;
+    --rule:#3A3527; --accent:#D19A67; --accent-ink:#E8C69C; --accent-soft:#3A2C1C;
+    --flag:#E08772; --flag-soft:#3B241F; --evergreen:#8FBB9A; --evergreen-soft:#233129;
+  }
+  *{box-sizing:border-box;}
+  body{ background:var(--paper); color:var(--ink); font-family:"Public Sans", -apple-system, sans-serif; line-height:1.55; }
+  ::selection{ background:var(--accent-soft); color:var(--accent-ink); }
+  .wrap{ max-width:960px; margin:0 auto; padding:0 28px 120px; }
+
+  .masthead{ padding:56px 0 40px; border-bottom:1px solid var(--rule); display:flex; flex-direction:column; gap:18px; }
+  .kicker{ font-family:"IBM Plex Mono", monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .kicker .dot{ width:5px;height:5px;border-radius:50%; background:var(--accent); flex:none; }
+  h1.title{ font-family:"Fraunces", serif; font-optical-sizing:auto; font-weight:600; font-size:clamp(38px, 6vw, 58px); line-height:1.02; letter-spacing:-.01em; margin:0; text-wrap:balance; }
+  .dek{ font-size:17px; color:var(--ink-soft); max-width:62ch; margin:0; }
+  .meta-row{ display:flex; gap:28px; flex-wrap:wrap; font-size:13px; color:var(--ink-faint); font-family:"IBM Plex Mono", monospace; }
+  .meta-row b{ color:var(--ink-soft); font-weight:600; }
+
+  section.block{ padding:56px 0; border-bottom:1px solid var(--rule); display:grid; grid-template-columns:120px 1fr; gap:32px; }
+  section.block:last-of-type{ border-bottom:none; }
+  .rail{ font-family:"IBM Plex Mono", monospace; font-size:12px; color:var(--ink-faint); padding-top:6px; }
+  .rail .num{ display:block; font-size:22px; color:var(--accent); font-weight:600; margin-bottom:6px; }
+  .rail .label{ letter-spacing:.08em; text-transform:uppercase; }
+  h2.h{ font-family:"Fraunces", serif; font-weight:600; font-size:29px; letter-spacing:-.01em; margin:0 0 18px; text-wrap:balance; }
+  .body-col > p{ max-width:66ch; color:var(--ink); margin:0 0 16px; }
+  .body-col > p.lede{ font-size:17px; color:var(--ink-soft); }
+  .body-col > p:last-child{ margin-bottom:0; }
+  @media (max-width: 640px){
+    section.block{ grid-template-columns:1fr; gap:10px; }
+    .rail{ display:flex; align-items:center; gap:10px; padding-top:0; }
+    .rail .num{ margin-bottom:0; }
+  }
+
+  .tag{ display:inline-flex; align-items:center; gap:6px; font-family:"IBM Plex Mono", monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; padding:3px 8px; border-radius:2px; font-weight:600; background:var(--accent-soft); color:var(--accent-ink); }
+  .tag.flag{ background:var(--flag-soft); color:var(--flag); }
+  .tag.ok{ background:var(--evergreen-soft); color:var(--evergreen); }
+
+  ul.principles{ list-style:none; margin:18px 0 0; padding:0; display:grid; gap:12px; }
+  ul.principles li{ display:grid; grid-template-columns:20px 1fr; gap:12px; font-size:14.5px; color:var(--ink); }
+  ul.principles li::before{ content:"—"; color:var(--accent); font-weight:600; }
+  ul.principles b{ font-weight:700; }
+
+  /* ---------- SITEMAP DIAGRAM ---------- */
+  .sitemap{ margin-top:8px; }
+  .sitemap .home{
+    background:var(--ink); color:var(--paper);
+    font-family:"Fraunces", serif; font-weight:600; font-size:20px;
+    padding:18px 24px; border-radius:3px; text-align:center; margin-bottom:0;
+  }
+  .sitemap .home small{ display:block; font-family:"IBM Plex Mono",monospace; font-weight:400; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin-top:4px; }
+  .sitemap .trunk{ width:1px; height:22px; background:var(--rule); margin:0 auto; }
+  .sitemap .row{ display:grid; grid-template-columns:repeat(7, 1fr); gap:10px; }
+  .sitemap .node{
+    background:var(--paper-raised); border:1px solid var(--rule); border-top:2px solid var(--accent);
+    border-radius:2px; padding:12px 10px; text-align:center;
+  }
+  .sitemap .node.wide{ border-top-color:var(--evergreen); }
+  .sitemap .node .path{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--accent-ink); display:block; margin-bottom:3px; }
+  .sitemap .node.wide .path{ color:var(--evergreen); }
+  .sitemap .node .name{ font-size:12.5px; font-weight:600; line-height:1.25; }
+  .sitemap .brace{ text-align:center; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-faint); margin-top:10px; letter-spacing:.04em; }
+  @media (max-width:700px){ .sitemap .row{ grid-template-columns:repeat(2,1fr); } }
+
+  /* ---------- PAGE TABLES ---------- */
+  .page-table{ width:100%; border-collapse:collapse; margin-top:6px; font-size:14px; }
+  .page-table th{ text-align:left; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); font-weight:600; padding:0 12px 10px 0; border-bottom:1px solid var(--rule); }
+  .page-table td{ padding:12px 12px 12px 0; border-bottom:1px solid var(--rule); vertical-align:top; }
+  .page-table tr:last-child td{ border-bottom:none; }
+  .page-table .b-name{ font-weight:700; white-space:nowrap; }
+  .subhead{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-ink); margin:28px 0 4px; }
+  .subhead:first-child{ margin-top:0; }
+
+  /* ---------- PENDING CHECKLIST ---------- */
+  .pending{ display:grid; gap:10px; margin-top:6px; }
+  .pending li{ list-style:none; display:grid; grid-template-columns:20px 1fr; gap:12px; padding:12px 14px; background:var(--flag-soft); border-radius:3px; font-size:14px; color:var(--ink); }
+  .pending li::before{ content:"!"; color:var(--flag); font-weight:700; font-family:"IBM Plex Mono",monospace; }
+
+  /* ---------- ROADMAP ---------- */
+  .roadmap{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--rule); border:1px solid var(--rule); margin-top:6px; border-radius:3px; overflow:hidden; }
+  .week{ background:var(--paper-raised); padding:20px 18px; display:flex; flex-direction:column; gap:10px; }
+  .week .wk{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); }
+  .week .wk b{ font-family:"Fraunces",serif; font-size:26px; color:var(--accent); display:block; font-weight:600; }
+  .week h3{ margin:0; font-size:14.5px; font-weight:700; line-height:1.3; }
+  .week p{ margin:0; font-size:12.5px; color:var(--ink-soft); line-height:1.5; }
+  .week .deliv{ margin-top:auto; padding-top:10px; border-top:1px dashed var(--rule); font-size:11.5px; color:var(--accent-ink); font-family:"IBM Plex Mono",monospace; }
+  @media (max-width:760px){ .roadmap{ grid-template-columns:1fr; } }
+
+  footer.close{ padding:48px 0 0; margin-top:8px; font-size:13px; color:var(--ink-faint); font-family:"IBM Plex Mono", monospace; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker"><span class="dot"></span> ARQUITECTURA DE LA INFORMACIÓN &nbsp;·&nbsp; ROADMAP</div>
+    <h1 class="title">Vitrina Los Robles</h1>
+    <p class="dek">El sitio funciona como una vitrina: la home muestra el escaparate completo de un vistazo, y cada división es su propio local, con la puerta abierta. Ancha, no profunda — todo a un clic.</p>
+    <div class="meta-row">
+      <span><b>Proyecto</b> Grupo Los Robles</span>
+      <span><b>Fase</b> IA + Roadmap</span>
+      <span><b>Plazo</b> 4 semanas</span>
+    </div>
+  </header>
+
+  <!-- 01 PRINCIPIO -->
+  <section class="block">
+    <div class="rail"><span class="num">01</span><span class="label">Principio</span></div>
+    <div class="body-col">
+      <h2 class="h">Minimalista no es lo mismo que escueto</h2>
+      <p class="lede">La navegación tiene que desaparecer para que el contenido se vea, sin dejar de ser fácil de recorrer. Cinco decisiones concretas:</p>
+      <ul class="principles">
+        <li><span><b>Header casi invisible</b> — logo + un toggle. La navegación real vive en un overlay tipográfico a pantalla completa (SideNav), no en un menú de dropdowns.</span></li>
+        <li><span><b>Cero carruseles automáticos</b> — la galería de divisiones avanza con el scroll del usuario, no con un timer.</span></li>
+        <li><span><b>Un momento invertido</b> — el Manifiesto rompe en fondo oscuro el papel claro del resto, para dar contraste editorial.</span></li>
+        <li><span><b>Misma fotografía, mismo grading</b> — entre las 5 divisiones, aunque el punto de partida sea stock curado.</span></li>
+        <li><span><b>Tipografía de peso contenido</b> — máximo 600, nunca bold. La jerarquía es tamaño y espacio, no grosor.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 02 MAPA -->
+  <section class="block">
+    <div class="rail"><span class="num">02</span><span class="label">Mapa</span></div>
+    <div class="body-col">
+      <h2 class="h">Ocho páginas, un solo nivel de profundidad</h2>
+      <p>Nada queda a más de un clic desde cualquier parte del sitio. Las cinco divisiones comparten exactamente el mismo nivel — ninguna es "más página" que las demás.</p>
+      <div class="sitemap">
+        <div class="home">Inicio<small>la vitrina</small></div>
+        <div class="trunk"></div>
+        <div class="row">
+          <div class="node"><span class="path">/nosotros</span><span class="name">Nosotros</span></div>
+          <div class="node wide"><span class="path">/gastronomia</span><span class="name">Gastronomía</span></div>
+          <div class="node wide"><span class="path">/vestuario</span><span class="name">Vestuario</span></div>
+          <div class="node wide"><span class="path">/agricola</span><span class="name">Agrícola</span></div>
+          <div class="node wide"><span class="path">/tecnologia</span><span class="name">Tecnológica</span></div>
+          <div class="node wide"><span class="path">/inmobiliaria</span><span class="name">Inmobiliaria</span></div>
+          <div class="node"><span class="path">/contacto</span><span class="name">Contacto</span></div>
+        </div>
+        <div class="brace">↑ las cinco divisiones comparten una sola plantilla</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 PAGINAS -->
+  <section class="block">
+    <div class="rail"><span class="num">03</span><span class="label">Páginas</span></div>
+    <div class="body-col">
+      <h2 class="h">Qué lleva cada una</h2>
+
+      <div class="subhead">Inicio ( / )</div>
+      <table class="page-table">
+        <thead><tr><th>Bloque</th><th>Qué hace</th><th>Formato</th></tr></thead>
+        <tbody>
+          <tr><td class="b-name">Header</td><td>Logo + toggle de menú</td><td>Sticky, transparente sobre el hero</td></tr>
+          <tr><td class="b-name">Hero</td><td>Propuesta de valor del holding en una frase</td><td>Tipografía protagonista, clamp()</td></tr>
+          <tr><td class="b-name">Nuestro Alcance</td><td>Cifras reales <span class="tag flag">hoy en 0</span></td><td>Count-up al entrar en viewport</td></tr>
+          <tr><td class="b-name">Galería de Divisiones</td><td>Las 5, foto curada + una línea + link</td><td>Galería horizontal scroll-driven</td></tr>
+          <tr><td class="b-name">Manifiesto (teaser)</td><td>Quiénes son, 2–3 líneas, link a /nosotros</td><td>Sección invertida (fondo oscuro)</td></tr>
+          <tr><td class="b-name">Cierre / CTA</td><td>Invitación a contacto</td><td>Un solo CTA</td></tr>
+        </tbody>
+      </table>
+
+      <div class="subhead">Nosotros ( /nosotros )</div>
+      <p style="margin-bottom:0">Página que hoy no existe en ningún lado del sitio actual. Historia real de los 20 años, hitos si los hay (fundación, incorporación de cada división), cifras de impacto, timeline opcional si el cliente confirma fechas.</p>
+
+      <div class="subhead">Plantilla de división ( ×5 )</div>
+      <table class="page-table">
+        <thead><tr><th>Bloque</th><th>Contenido</th></tr></thead>
+        <tbody>
+          <tr><td class="b-name">Hero de división</td><td>Nombre + tagline propio + imagen curada</td></tr>
+          <tr><td class="b-name">Qué hacen</td><td>Un párrafo directo</td></tr>
+          <tr><td class="b-name">Marcas / proyectos reales</td><td>Gastronomía → marcas de Grupo Mil Sabores · Vestuario → BOSS/HUGO/GEOX y tiendas · Agrícola → Valbifrut, cifra de exportación · Tecnológica → productos de Dot Solutions · Inmobiliaria → proyectos vigentes</td></tr>
+          <tr><td class="b-name">Galería</td><td>Fotos reales de la operación si existen</td></tr>
+          <tr><td class="b-name">CTA de salida</td><td>Con sitio propio (Dot Solutions, Valbifrut, Gastronomía) → lleva ahí. Vestuario e Inmobiliaria (sin sitio propio) → cierran con contacto.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="subhead">Contacto ( /contacto )</div>
+      <p style="margin-bottom:0">Formulario + datos reales. Hoy <code style="font-family:'IBM Plex Mono',monospace;background:var(--accent-soft);color:var(--accent-ink);padding:1px 5px;border-radius:2px;font-size:12.5px;">contracts/site.json</code> tiene email, teléfono y dirección vacíos — es el primer dato a completar.</p>
+    </div>
+  </section>
+
+  <!-- 04 PENDIENTE -->
+  <section class="block">
+    <div class="rail"><span class="num">04</span><span class="label">Pendiente</span></div>
+    <div class="body-col">
+      <h2 class="h">Lo que necesito del cliente antes de construir</h2>
+      <p>No se inventa contenido — es la regla más dura de este proyecto. Estos cinco datos son bloqueantes:</p>
+      <ul class="pending">
+        <li>Cifras reales de "Nuestro Alcance" (sucursales, sectores, empleados, marcas activas)</li>
+        <li>Email, teléfono y dirección de contacto</li>
+        <li>Marcas exactas que opera Gastronomía (Grupo Mil Sabores)</li>
+        <li>Proyectos vigentes de Inmobiliaria (los actuales datan de 2020)</li>
+        <li>Fotografía propia de cada división, si existe — si no, se cura stock consistente vía Magnific</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 05 ROADMAP -->
+  <section class="block">
+    <div class="rail"><span class="num">05</span><span class="label">Roadmap</span></div>
+    <div class="body-col">
+      <h2 class="h">Cuatro semanas</h2>
+      <div class="roadmap">
+        <div class="week">
+          <div class="wk"><b>01</b>Semana</div>
+          <h3>Referentes + dirección de diseño</h3>
+          <p>Investigar 2–3 referentes del rubro, definir IA (este documento) y aprobarla.</p>
+          <div class="deliv">Blueprint §16 · theme.css definitivo · site.json con datos reales</div>
+        </div>
+        <div class="week">
+          <div class="wk"><b>02</b>Semana</div>
+          <h3>Home (vitrina) + Nosotros</h3>
+          <p>Header/SideNav nuevos, Hero, Alcance, Galería de Divisiones, Manifiesto.</p>
+          <div class="deliv">Página Nosotros completa</div>
+        </div>
+        <div class="week">
+          <div class="wk"><b>03</b>Semana</div>
+          <h3>Las 5 páginas de división + Contacto</h3>
+          <p>Template de división construido y poblado con contenido real ×5.</p>
+          <div class="deliv">Formulario de contacto funcional</div>
+        </div>
+        <div class="week">
+          <div class="wk"><b>04</b>Semana</div>
+          <h3>Pulido, responsive, QA</h3>
+          <p>375 / 768 / 1024 / 1440px, motion mobile, SEO, performance, cero placeholders.</p>
+          <div class="deliv">Deploy</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="close">
+    <span>Vitrina Los Robles — IA &amp; Roadmap</span>
+    <span>Grupo Los Robles · septiembre 2026</span>
+  </footer>
+
+</div>

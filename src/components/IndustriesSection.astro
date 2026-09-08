@@ -1,0 +1,125 @@
+---
+// src/components/IndustriesSection.astro
+// Contenedor principal de "Nuestras Divisiones": el texto (SEO-safe, HTML estático) vive
+// aquí en Astro — NUNCA solo dentro de la isla React (regla §19.1 del CLAUDE.md de este
+// proyecto). La isla `IndustriesCanvas.jsx` solo aporta la capa 3D de fondo.
+//
+// Mecanismo del scrollytelling: la sección exterior queda tan alta como el contenido real
+// (nada de vh fijos por división) gracias al truco de margen negativo — el canvas queda
+// "sticky" mientras el bloque de texto (con -mt-[100vh]) scrollea encima. Cada <article
+// data-industry-slot> es lo que lee useIndustriesScroll.js para activar su objeto 3D.
+import IndustriesCanvas from './islands/IndustriesCanvas';
+
+const {
+  label = 'Nuestras Divisiones',
+  divisions = [],
+} = Astro.props;
+---
+
+<section class="relative bg-[#16130d] text-[#f2ece0]" data-industries3d-section data-gsap-section="industries3d">
+  <div class="sticky top-0 z-0 h-screen" aria-hidden="true">
+    <IndustriesCanvas client:visible />
+  </div>
+
+  <div class="relative z-10 -mt-[100vh]">
+    <div class="px-6 pt-16 sm:px-10 lg:px-16">
+      <span class="mb-2 block text-sm uppercase tracking-[0.3em] text-[#c9a15c]">02</span>
+      <h2 class="font-[var(--font-heading)] text-3xl tracking-tight sm:text-4xl">{label}</h2>
+    </div>
+
+    {divisions.map((d, i) => {
+      const isRight = i % 2 === 0; // objeto 3D a la derecha en pares (0,2,4) → texto a la izquierda
+      return (
+        <article
+          class={`flex min-h-screen items-center px-6 py-20 sm:px-10 lg:px-16 ${isRight ? 'justify-start' : 'justify-end'}`}
+          id={d.id}
+          data-industry-slot
+        >
+          <div class={`max-w-xl ${isRight ? '' : 'text-right'}`} data-industry-text>
+            <span class="font-[var(--font-heading)] text-6xl text-[#3a3222] sm:text-8xl" style="-webkit-text-stroke: 1px #6b6355;" data-industry-num>
+              {d.number}
+            </span>
+
+            <h3 class="mt-2 font-[var(--font-heading)] text-3xl tracking-tight sm:text-5xl" data-industry-name>
+              {d.name}
+            </h3>
+
+            <p class="mt-4 max-w-[46ch] text-base text-[#b8ab95] sm:text-lg" data-industry-desc>
+              {d.description}
+            </p>
+
+            {d.brands && d.brands.length > 0 && (
+              <ul class={`mt-6 grid gap-2 border-t border-[#3a3222] pt-6 ${isRight ? '' : 'ml-auto'}`} role="list">
+                {d.brands.map((b) => (
+                  <li class="flex flex-wrap items-baseline gap-2">
+                    <span class="font-[var(--font-heading)] text-base">{b.name}</span>
+                    <span class="text-xs tracking-wide text-[#6b6355]">
+                      {b.locations.join(' · ')}{b.note ? ` · ${b.note}` : ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {d.projects && d.projects.length > 0 && (
+              <ul class="mt-6 grid gap-2 border-t border-[#3a3222] pt-6 text-sm text-[#b8ab95]" role="list">
+                {d.projects.map((p) => <li>{p}</li>)}
+              </ul>
+            )}
+
+            {d.gallery && d.gallery.length > 0 && (
+              <div class={`mt-6 flex flex-wrap gap-2 ${isRight ? '' : 'justify-end'}`}>
+                {d.gallery.map((src) => (
+                  <img src={src} alt="" loading="lazy" class="h-16 w-22 rounded-sm object-cover" />
+                ))}
+              </div>
+            )}
+
+            {d.ctaLabel && d.ctaHref && (
+              <a
+                href={d.ctaHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mt-6 inline-flex items-center gap-2 border-b border-[#c9a15c]/50 pb-1 text-sm font-semibold tracking-wide text-[#c9a15c] transition-colors hover:border-[#dbb572] hover:text-[#dbb572]"
+              >
+                {d.ctaLabel} <span aria-hidden="true">↗</span>
+              </a>
+            )}
+          </div>
+        </article>
+      );
+    })}
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  function initIndustries3DText() {
+    const slots = document.querySelectorAll('[data-industry-slot]');
+    if (!slots.length) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+
+    slots.forEach((slot) => {
+      const els = [
+        slot.querySelector('[data-industry-num]'),
+        slot.querySelector('[data-industry-name]'),
+        slot.querySelector('[data-industry-desc]'),
+      ].filter(Boolean);
+
+      gsap.from(els, {
+        y: 28,
+        opacity: 0,
+        stagger: 0.08,
+        duration: 0.8,
+        ease: 'expo.out',
+        scrollTrigger: { trigger: slot, start: 'top 70%', once: true },
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load', initIndustries3DText);
+</script>

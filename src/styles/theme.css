@@ -1,0 +1,141 @@
+/* ============================================================
+   src/styles/theme.css
+   CONTRATO ESTILÍSTICO — solo editar los valores, nunca la estructura
+   El Agente UI modifica únicamente este archivo para cambiar identidad visual
+
+   DIRECCIÓN ACTUAL: "Lujo Silencioso" (quiet luxury) — ver docs/referentes-diseno.md
+   y docs/arquitectura-informacion.md. Playfair Display (serif editorial) + Inter
+   (sans geométrica). Paleta casi monocromática: blanco cálido, negro profundo y un
+   único acento taupe — validada contra heladerialarrs.cl y lingers.it (§ referentes).
+   ============================================================ */
+
+/* Reset y base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ─── CONTRATO: Variables que la Fábrica manipula ─────────── */
+:root {
+  /* Colores — "Lujo Silencioso": blanco cálido + negro profundo + un único acento taupe */
+  --bg-primary:      #FDFCFA;
+  --bg-secondary:    #F1EBE1;
+  --text-primary:    #14130F;
+  --text-secondary:  #6B6559;
+  --accent:          #777162;
+  --accent-hover:    #5C5749;
+  --accent-warm:     #8C7B5E;
+  --border:          #E4DDD0;
+
+  /* Sección invertida (momento oscuro — Manifiesto) */
+  --bg-primary-inverse:     #14130F;
+  --bg-secondary-inverse:   #1F1C16;
+  --text-primary-inverse:   #FBF9F5;
+  --text-secondary-inverse: #A99C87;
+  --border-inverse:         #332E24;
+
+  /* Verde de marca — fijado por el Ingeniero Líder (reemplaza el valor muestreado
+     del isotipo). Uso: fondo del Preloader.astro (§ momento de carga). */
+  --brand-green: #2D4025;
+
+  /* Tipografías — las URL de Google Fonts se pasan via BaseHead.
+     Playfair Display solo hasta peso 600 (regla dura §15.3 — nunca bold). */
+  --font-heading: 'Playfair Display', 'Georgia', serif;
+  --font-body:    'Inter', -apple-system, sans-serif;
+  --font-mono:    'Courier New', monospace;
+
+  /* Escala tipográfica — cuerpo/UI (tamaños fijos) */
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.25rem;
+  --text-xl:   1.5rem;
+  --text-2xl:  2rem;
+  --text-3xl:  3rem;
+  --text-4xl:  4.5rem;
+
+  /* Escala tipográfica — títulos (tamaño FIJO en px, no clamp/vw). LÍNEA FIJA DE DISEÑO
+     DEL PROYECTO, para siempre (pedido explícito del Ingeniero Líder): todo H1/H2/H3
+     usa uno de estos 3 tokens, el mismo valor en pixeles en cualquier viewport — nunca
+     un clamp() ni un vw propio por componente. Jerarquía innegociable:
+     --text-display > --text-h2 > --text-h3. Un H3 NUNCA debe superar a su H2 padre
+     (bug detectado y corregido en "Nuestras Divisiones": .industries__name rendía más
+     grande que .industries__heading). Ya no existen variantes "-lg"/destacadas de H3:
+     todos los H3 del sitio miden exactamente lo mismo, sin excepción.
+     Excepción única y deliberada: el wordmark billboard de Footer.astro
+     (.site-footer__giant) NO usa estos tokens — necesita escalar con vw para caber en
+     una sola línea a cualquier ancho de pantalla; ver comentario en ese archivo. */
+  --text-display: 88px; /* H1 único por página (Hero) + cierres tipo CTA gigante */
+  --text-h2:      60px; /* todo <h2> de sección: "Nuestras Divisiones", "Contacto", CTA inversionistas */
+  --text-h3:      44px; /* todo <h3>: nombre de división, subtítulos de card — sin excepción, sin variante "destacada" */
+
+  /* No es un heading: es un párrafo editorial largo (la frase del Manifiesto), un rol
+     distinto a H2/H3 aunque hoy coincida en valor con --text-h3 — token separado a
+     propósito para no acoplar accidentalmente su tamaño al de los H3 si alguno cambia.
+     44px fue el máximo verificado sin partir palabras a la mitad en 375px (60px sí
+     partía "construyendo" en dos líneas — bug real detectado en verificación). */
+  --text-quote:   44px;
+
+  /* Espaciado modular */
+  --space-xs:  0.5rem;
+  --space-sm:  1rem;
+  --space-md:  2rem;
+  --space-lg:  4rem;
+  --space-xl:  8rem;
+  --space-2xl: 12rem;
+
+  /* Contenedor */
+  --container-max: 1280px;
+  --container-pad: var(--space-md);
+
+  /* Bordes — casi rectos, coherente con la sobriedad editorial del referente (Larrs/Lingers) */
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-full: 9999px;
+
+  /* Animación — usadas por GSAP y transiciones CSS */
+  --ease-expo:       cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:         cubic-bezier(0.4, 0, 1, 1);
+  --ease-out:        cubic-bezier(0, 0, 0.2, 1);
+  --transition-fast: 0.3s var(--ease-out);
+  --transition-smooth: 0.6s var(--ease-expo);
+
+  /* Sombras — mínimas, casi planas */
+  --shadow-sm: 0 1px 2px rgba(20,19,15,0.05);
+  --shadow-md: 0 4px 12px rgba(20,19,15,0.06);
+  --shadow-lg: 0 8px 24px rgba(20,19,15,0.08);
+
+  /* Z-index escala */
+  --z-base:      0;
+  --z-above:     10;
+  --z-modal:     100;
+  --z-overlay:   1000;
+  --z-preloader: 2000; /* siempre por encima de cualquier overlay (SideNav incluido) */
+}
+
+/* Utilidades base */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

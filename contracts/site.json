@@ -1,0 +1,55 @@
+{
+  "_comment": "Contrato de sitio — Grupo Los Robles. Holding con 5 divisiones: Gastronomía, Vestuario, Agrícola (Valbifrut), Soluciones Tecnológicas (Dot Solutions), Inmobiliaria.",
+  "contract_type": "site",
+  "site": {
+    "domain": "https://grupolosrobles.com",
+    "siteName": "Grupo Los Robles",
+    "tagline": "20+ años convirtiendo ideas en realidades sólidas",
+    "language": "es",
+    "defaultOgImage": "/images/2sector-gastro.webp"
+  },
+  "company": {
+    "legalName": "Grupo Los Robles",
+    "email": "",
+    "phone": "",
+    "address": ""
+  },
+  "orderUrl": "#contacto",
+  "navigation": [
+    { "label": "Home",                   "href": "#inicio" },
+    { "label": "Gastronomía",             "href": "#gastronomia" },
+    { "label": "Vestuario",               "href": "#vestuario" },
+    { "label": "Agrícola",                "href": "#agricola" },
+    { "label": "Soluciones Tecnológicas", "href": "#tecnologia" },
+    { "label": "Inmobiliaria",            "href": "#inmobiliaria" },
+    { "label": "Contacto",                "href": "#contacto" }
+  ],
+  "footerLinks": [
+    { "label": "Dot Solutions",     "href": "https://dotsolutions.io" },
+    { "label": "Grupo Mil Sabores", "href": "https://grupomilsabores.cl" },
+    { "label": "Valbifrut",         "href": "https://valbifrut.cl" }
+  ],
+  "social": [
+    { "label": "LinkedIn", "href": "https://www.linkedin.com/company/grupolosrobles/" }
+  ],
+  "theme": {
+    "_comment": "Lujo Silencioso — ver docs/referentes-diseno.md. Fuente de verdad; theme.css debe reflejar estos mismos valores.",
+    "--bg-primary":     "#FDFCFA",
+    "--bg-secondary":   "#F1EBE1",
+    "--text-primary":   "#14130F",
+    "--text-secondary": "#6B6559",
+    "--accent":         "#777162",
+    "--accent-hover":   "#5C5749",
+    "--border":         "#E4DDD0",
+    "--font-heading":   "'Playfair Display', serif",
+    "--font-body":      "'Inter', sans-serif"
+  },
+  "organizationSchema": {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Grupo Los Robles",
+    "url": "https://grupolosrobles.com",
+    "logo": "https://grupolosrobles.com/images/logo-losRobles.webp",
+    "description": "Holding con más de 20 años de trayectoria en Gastronomía, Vestuario, Agrícola, Soluciones Tecnológicas e Inmobiliaria."
+  }
+}

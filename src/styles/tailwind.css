@@ -1,0 +1,5 @@
+/* src/styles/tailwind.css
+   Tailwind v4 — instalado a pedido para el Hero3D. Coexiste con theme.css:
+   theme.css sigue siendo la fuente de verdad de color/tipografía para el resto del sitio;
+   las utilidades de Tailwind se usan puntualmente en la capa editorial del Hero3D. */
+@import "tailwindcss";

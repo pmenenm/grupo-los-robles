@@ -1,0 +1,156 @@
+---
+// src/components/ContactReveal.astro
+// Contacto + CTA a inversionistas comparten UN fondo fijo (position:sticky) que se revela
+// a medida que ambas secciones suben con el scroll — referente: supreme-luxury.com
+// (footer__sticky-group + footer__cta-banner en su bundle), recreado con contenido,
+// imágenes y CSS propios. El fondo pertenece a esta sección — ya no vive en Footer.astro.
+import ContactSection from './ContactSection.astro';
+
+const {
+  contact = {}, // { eyebrow, title, intro, divisions }
+  cta = {},     // { eyebrow, heading, ctaText, ctaHref }
+  images = [],
+  locale = 'es',
+} = Astro.props;
+---
+
+<section class="reveal">
+  <div class="reveal__bg" aria-hidden="true">
+    <div class="reveal__bg-imgs">
+      {images.map((src) => <img src={src} alt="" loading="lazy" />)}
+    </div>
+    <div class="reveal__bg-overlay"></div>
+  </div>
+
+  <div class="reveal__fg">
+    <ContactSection
+      eyebrow={contact.eyebrow}
+      title={contact.title}
+      intro={contact.intro}
+      divisions={contact.divisions}
+      locale={locale}
+      overlay={true}
+    />
+
+    <div class="reveal__cta" data-reveal-cta>
+      <p class="reveal__cta-eyebrow">{cta.eyebrow}</p>
+      <h2 class="reveal__cta-heading">{cta.heading}</h2>
+      <a href={cta.ctaHref} class="reveal__cta-btn">{cta.ctaText}</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  function initRevealCta() {
+    const cta = document.querySelector('[data-reveal-cta]');
+    if (!cta) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    gsap.from(cta.children, {
+      y: 24,
+      opacity: 0,
+      stagger: 0.1,
+      duration: 0.9,
+      ease: 'expo.out',
+      scrollTrigger: { trigger: cta, start: 'top 75%', once: true },
+    });
+  }
+
+  document.addEventListener('astro:page-load', initRevealCta);
+</script>
+
+<style>
+  .reveal {
+    position: relative;
+  }
+
+  /* Fondo fijo — se mantiene pegado a top:0 mientras .reveal__fg (más alto, gracias al
+     margin-top negativo que cancela el espacio en flujo de .reveal__bg) scrollea encima. */
+  .reveal__bg {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    z-index: 0;
+    color-scheme: dark;
+  }
+  .reveal__bg-imgs {
+    position: absolute;
+    inset: 0;
+    display: flex;
+  }
+  .reveal__bg-imgs img {
+    flex: 1 1 0;
+    height: 100%;
+    min-width: 0;
+    object-fit: cover;
+  }
+  .reveal__bg-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--bg-primary-inverse) 55%, transparent) 0%,
+      color-mix(in srgb, var(--bg-primary-inverse) 72%, transparent) 50%,
+      color-mix(in srgb, var(--bg-primary-inverse) 88%, transparent) 100%);
+  }
+
+  .reveal__fg {
+    position: relative;
+    z-index: 1;
+    margin-top: -100svh;
+  }
+
+  .reveal__cta {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-lg);
+  }
+  .reveal__cta-eyebrow {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-secondary-inverse);
+    margin-bottom: var(--space-sm);
+  }
+  .reveal__cta-heading {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    font-size: var(--text-h2);
+    line-height: 1.2;
+    max-width: 22ch;
+    color: var(--text-primary-inverse);
+    text-wrap: balance;
+    margin-bottom: var(--space-lg);
+  }
+  .reveal__cta-btn {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-primary-inverse);
+    text-decoration: none;
+    border: 1px solid color-mix(in srgb, var(--text-primary-inverse) 70%, transparent);
+    padding: var(--space-sm) var(--space-xl);
+    transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  }
+  .reveal__cta-btn:hover {
+    background-color: var(--text-primary-inverse);
+    color: var(--bg-primary-inverse);
+    border-color: var(--text-primary-inverse);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal__bg { position: relative; height: auto; min-height: 60svh; }
+    .reveal__fg { margin-top: 0; }
+  }
+</style>

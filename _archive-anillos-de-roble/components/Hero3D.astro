@@ -1,0 +1,144 @@
+---
+// src/components/Hero3D.astro
+// Componente principal: une la capa editorial (Tailwind, HTML estático — SEO-safe) con
+// la escena 3D (isla React, HeroCanvas.jsx) y ejecuta el timeline de entrada con GSAP.
+// El scroll-linking del objeto 3D vive en HeroScene.jsx (su propio ScrollTrigger, lee
+// data-hero3d-section de esta sección); aquí solo se anima el texto y se dispara la
+// transición reposo→activo de la escena al terminar el intro.
+import HeroCanvas from './islands/HeroCanvas';
+
+const {
+  eyebrow,
+  headline,
+  subheadline,
+  ctaText,
+  ctaHref,
+} = Astro.props;
+
+const words = headline ? headline.split(' ') : [];
+---
+
+<section
+  class="relative min-h-screen min-h-[100svh] overflow-hidden bg-[#16130d] text-[#f2ece0]"
+  data-hero3d-section
+  data-gsap-section="hero3d"
+>
+  <!-- Escena 3D — isla React, un solo momento premium (§19 CLAUDE.md) -->
+  <div class="absolute inset-0 z-0" aria-hidden="true">
+    <HeroCanvas client:load />
+  </div>
+
+  <!-- Vignette editorial sutil para que el texto respire sobre el 3D -->
+  <div
+    class="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(120%_90%_at_50%_100%,#16130d_15%,transparent_60%)]"
+    aria-hidden="true"
+  ></div>
+
+  <div class="relative z-[2] flex min-h-screen min-h-[100svh] flex-col justify-between px-6 py-8 sm:px-10 sm:py-10 lg:px-16">
+    <!-- Nav editorial minimalista (decorativo — el nav funcional real vive en Header/SideNav) -->
+    <div
+      class="flex items-baseline justify-between text-[10px] uppercase tracking-[0.3em] text-[#b8ab95]"
+      data-hero3d-nav
+    >
+      <span>Grupo Los Robles — Holding</span>
+      <span>( 5 Divisiones )</span>
+    </div>
+
+    <!-- Bloque tipográfico brutalista -->
+    <div class="max-w-[90vw] lg:max-w-[70vw]">
+      {eyebrow && (
+        <p
+          class="mb-4 text-xs uppercase tracking-[0.25em] text-[#c9a15c] sm:text-sm"
+          data-hero3d-eyebrow
+        >
+          {eyebrow}
+        </p>
+      )}
+
+      <h1
+        class="flex flex-wrap font-[var(--font-heading)] text-[13vw] font-normal leading-[0.92] tracking-[-0.04em] sm:text-[11vw] lg:text-[7.5vw]"
+      >
+        {words.map((word, i) => (
+          <span class="overflow-hidden pb-[0.08em]">
+            <span
+              class:list={["block", i % 3 === 1 ? 'text-[#c9a15c]' : '']}
+              data-hero3d-word
+            >
+              {word}&nbsp;
+            </span>
+          </span>
+        ))}
+      </h1>
+
+      {subheadline && (
+        <p
+          class="mt-6 max-w-[46ch] text-base text-[#b8ab95] sm:text-lg"
+          data-hero3d-sub
+        >
+          {subheadline}
+        </p>
+      )}
+    </div>
+
+    <!-- Fila inferior: CTA + scroll cue -->
+    <div class="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+      {ctaText && (
+        <a
+          href={ctaHref}
+          class="group inline-flex items-center gap-3 rounded-full border border-[#3a3222] px-7 py-3 text-sm font-semibold tracking-wide text-[#f2ece0] transition-colors hover:border-[#c9a15c] hover:text-[#c9a15c]"
+          data-hero3d-cta
+        >
+          {ctaText}
+          <span class="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
+        </a>
+      )}
+
+      <div class="flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-[#6b6355]" data-hero3d-scrollcue>
+        <span class="h-8 w-px bg-[#3a3222]"></span>
+        Scroll
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+
+  function initHero3D() {
+    const section = document.querySelector('[data-gsap-section="hero3d"]');
+    if (!section) return;
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      document.dispatchEvent(new CustomEvent('hero3d:activate'));
+      return;
+    }
+
+    const nav = section.querySelector('[data-hero3d-nav]');
+    const eyebrow = section.querySelector('[data-hero3d-eyebrow]');
+    const words = section.querySelectorAll('[data-hero3d-word]');
+    const sub = section.querySelector('[data-hero3d-sub]');
+    const cta = section.querySelector('[data-hero3d-cta]');
+    const scrollcue = section.querySelector('[data-hero3d-scrollcue]');
+
+    const tl = gsap.timeline({ defaults: { ease: 'expo.out' } });
+
+    if (nav) tl.from(nav, { opacity: 0, y: -8, duration: 0.6 });
+    if (eyebrow) tl.from(eyebrow, { y: 16, opacity: 0, duration: 0.7 }, '-=0.2');
+    tl.from(words, { y: '110%', opacity: 0, stagger: 0.045, duration: 1.1 }, '-=0.3');
+    if (sub) tl.from(sub, { y: 20, opacity: 0, duration: 0.8 }, '-=0.6');
+    if (cta) tl.from(cta, { y: 16, opacity: 0, duration: 0.7 }, '-=0.5');
+    if (scrollcue) tl.from(scrollcue, { opacity: 0, duration: 0.6 }, '-=0.4');
+
+    // Al terminar el intro, la escena 3D pasa de reposo a activa (ver HeroScene.jsx)
+    tl.call(() => document.dispatchEvent(new CustomEvent('hero3d:activate')));
+
+    // Micro-interacción: CTA con leve lift al hover (consistente con el resto del sitio)
+    if (cta && window.matchMedia('(pointer: fine)').matches) {
+      cta.addEventListener('mouseenter', () => gsap.to(cta, { y: -2, duration: 0.3, ease: 'power2.out' }));
+      cta.addEventListener('mouseleave', () => gsap.to(cta, { y: 0, duration: 0.3, ease: 'power2.out' }));
+    }
+  }
+
+  document.addEventListener('astro:page-load', initHero3D);
+</script>

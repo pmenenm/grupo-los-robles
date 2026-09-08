@@ -1,0 +1,290 @@
+---
+// src/components/Footer.astro
+// Chrome global del sitio. Lee contracts/site*.json (marca + contacto + links) según `locale`.
+// Rediseño: fondo verde de marca (mismo --brand-green del Preloader) + texto café/marrón
+// (--text-secondary-inverse, la misma variable "cálida sobre oscuro" que ya usan
+// ManifestoSection/ContactReveal) + wordmark gigante con máscara de imagen (background-clip:
+// text) usando exactamente la misma composición de 5 fotos que ContactReveal.astro.
+import siteEs from '../../contracts/site.json';
+import siteEn from '../../contracts/site.en.json';
+
+const { locale = 'es' } = Astro.props;
+const site = locale === 'en' ? siteEn : siteEs;
+const t = locale === 'en'
+  ? {
+      talk: "Let's talk →", nav: 'Navigation', navLabel: 'Footer navigation', contact: 'Contact',
+      write: 'Write to us →', rights: 'All rights reserved.',
+    }
+  : {
+      talk: 'Hablemos →', nav: 'Navegación', navLabel: 'Navegación de pie de página', contact: 'Contacto',
+      write: 'Escríbenos →', rights: 'Todos los derechos reservados.',
+    };
+
+const year = new Date().getFullYear();
+const { siteName, tagline } = site.site;
+const company = site.company ?? {};
+const social = site.social ?? [];
+const orderUrl = site.orderUrl ?? '#';
+const hasContactInfo = company.email || company.phone || company.address;
+---
+
+<footer class="site-footer">
+  <div class="container site-footer__top">
+    <div class="site-footer__brand">
+      <img class="site-footer__logo" src="/images/LOGO-LOSrOBLES-BLANCO.webp" alt={siteName} />
+      {tagline && <p class="site-footer__tagline">{tagline}</p>}
+      <a href={orderUrl} class="site-footer__cta">{t.talk}</a>
+
+      {social.length > 0 && (
+        <ul class="site-footer__social" role="list">
+          {social.map((s) => (
+            <li>
+              <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label} data-magnetic-link>
+                {s.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+
+    <div class="site-footer__cols">
+      <nav class="site-footer__col" aria-label={t.navLabel}>
+        <h3>{t.nav}</h3>
+        <ul role="list">
+          {(site.navigation ?? []).map((item) => (
+            <li><a href={item.href}>{item.label}</a></li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="site-footer__col">
+        {hasContactInfo && <h3>{t.contact}</h3>}
+        <ul role="list">
+          {company.email   && <li><a href={`mailto:${company.email}`}>{company.email}</a></li>}
+          {company.phone   && <li><a href={`tel:${company.phone.replace(/\s/g, '')}`}>{company.phone}</a></li>}
+          {company.address && <li><span>{company.address}</span></li>}
+          {!hasContactInfo && <li><a href={orderUrl}>{t.write}</a></li>}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <p class="site-footer__giant" aria-hidden="true">{siteName.toUpperCase()}</p>
+
+  <div class="container site-footer__bottom">
+    <p>&copy; {year} {company.legalName ?? siteName}. {t.rights}</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    /* Momento de marca sobre fondo verde — mismo criterio de remapeo local de variables
+       que ManifestoSection.astro, pero con --brand-green (Preloader) como fondo en vez
+       del negro-inverse genérico del tema. */
+    --bg-primary: var(--brand-green);
+    --text-primary: var(--text-primary-inverse);
+    --text-secondary: var(--text-secondary-inverse);
+    --accent: var(--text-secondary-inverse);
+    --accent-hover: var(--text-primary-inverse);
+    --border: var(--border-inverse);
+
+    position: relative;
+    overflow: hidden;
+    padding-top: var(--space-xl);
+    background-color: var(--bg-primary);
+    color-scheme: dark;
+  }
+
+  .site-footer__top {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+    padding-bottom: var(--space-lg);
+  }
+
+  .site-footer__logo {
+    height: 2rem;
+    width: auto;
+  }
+  .site-footer__tagline {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+    margin-block: var(--space-sm);
+    max-width: 36ch;
+  }
+  .site-footer__cta {
+    position: relative;
+    display: inline-block;
+    font-family: var(--font-body);
+    font-weight: 600;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast), transform var(--transition-fast);
+  }
+  .site-footer__cta::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    width: 100%;
+    height: 1px;
+    background-color: currentColor;
+    transform: scaleX(0.3);
+    transform-origin: left;
+    transition: transform var(--transition-fast);
+  }
+  .site-footer__cta:hover {
+    color: var(--accent-hover);
+    transform: translateX(3px);
+  }
+  .site-footer__cta:hover::after { transform: scaleX(1); }
+
+  .site-footer__social {
+    display: flex;
+    gap: var(--space-md);
+    list-style: none;
+    margin-top: var(--space-md);
+  }
+  .site-footer__social a {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast), transform var(--transition-fast);
+    display: inline-block;
+  }
+  .site-footer__social a:hover {
+    color: var(--text-primary);
+    transform: translateY(-2px);
+  }
+
+  .site-footer__cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+  }
+  .site-footer__col h3 {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+  }
+  .site-footer__col ul { list-style: none; display: grid; gap: var(--space-xs); }
+  .site-footer__col a,
+  .site-footer__col span {
+    position: relative;
+    display: inline-block;
+    width: fit-content;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  .site-footer__col a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 100%;
+    height: 1px;
+    background-color: var(--text-primary);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--transition-fast);
+  }
+  .site-footer__col a:hover { color: var(--text-primary); }
+  .site-footer__col a:hover::after { transform: scaleX(1); }
+
+  /* EXCEPCIÓN deliberada a la escala tipográfica fija del proyecto (theme.css: --text-display/
+     --text-h2/--text-h3, siempre en px, nunca clamp/vw): este wordmark es un billboard de
+     una sola línea que debe caber en el ancho del viewport a cualquier tamaño de pantalla,
+     así que necesita escalar con vw por diseño — no es un H1/H2/H3 real (es aria-hidden).
+     Wordmark gigante con máscara de imagen — misma composición de 5 fotos + velo oscuro
+     que ContactReveal.astro (.reveal__bg-imgs + .reveal__bg-overlay), ver ese componente
+     para el origen exacto de estos 5 archivos y del degradado. Capas de background
+     (la primera queda arriba): velo oscuro sobre las 5 fotos, cada una ocupando 1/5 del
+     ancho (background-size 20% 100% + background-position 0/25/50/75/100% = las 5 franjas
+     se tocan borde a borde, sin huecos ni superposición — ver nota más abajo). */
+  .site-footer__giant {
+    margin: 0;
+    padding-inline: var(--space-xs);
+    /* PRUEBA: sans-serif (como el wordmark del logo) en vez de var(--font-heading).
+       Revertir a var(--font-heading) + font-weight: 500 si no convence. */
+    font-family: var(--font-body);
+    font-weight: 600;
+    text-transform: uppercase;
+    line-height: 0.82;
+    letter-spacing: -0.01em;
+    text-align: center;
+    font-size: clamp(2.2rem, 9.7vw, 9.2rem);
+    white-space: nowrap;
+
+    background-image:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--bg-primary-inverse) 55%, transparent) 0%,
+        color-mix(in srgb, var(--bg-primary-inverse) 72%, transparent) 50%,
+        color-mix(in srgb, var(--bg-primary-inverse) 88%, transparent) 100%
+      ),
+      url('/images/lujo-silencioso/division-gastronomia.jpg'),
+      url('/images/lujo-silencioso/division-vestuario.jpg'),
+      url('/images/lujo-silencioso/division-agricola.jpg'),
+      url('/images/lujo-silencioso/division-tecnologica.jpg'),
+      url('/images/lujo-silencioso/division-inmobiliario.jpg');
+    background-repeat: no-repeat;
+    background-position:
+      0 0,
+      0% center,
+      25% center,
+      50% center,
+      75% center,
+      100% center;
+    background-size:
+      100% 100%,
+      20% 100%,
+      20% 100%,
+      20% 100%,
+      20% 100%,
+      20% 100%;
+
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Navegador sin soporte de background-clip:text: texto legible en el color café/marrón
+     del tema en vez de quedar invisible (color:transparent sin recorte real). */
+  @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+    .site-footer__giant {
+      color: var(--text-secondary);
+      -webkit-text-fill-color: var(--text-secondary);
+    }
+  }
+
+  .site-footer__bottom {
+    padding-block: var(--space-md) var(--space-lg);
+    margin-top: var(--space-md);
+    border-top: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+  }
+  .site-footer__bottom p {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+  }
+
+  @media (min-width: 768px) {
+    .site-footer__top {
+      grid-template-columns: 1.2fr 1fr;
+      align-items: start;
+      gap: var(--space-2xl);
+    }
+    .site-footer__cols { gap: var(--space-lg); }
+  }
+</style>

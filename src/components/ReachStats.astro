@@ -1,0 +1,228 @@
+---
+// src/components/ReachStats.astro
+// Formato: stats gigantes con count-up (§16.3). "Nuestro Alcance".
+const {
+  label = 'Nuestro Alcance',
+  intro,
+  stats = [], // [{ prefix, value, suffix, caption }]
+} = Astro.props;
+---
+
+<section class="reach" data-gsap-section="reach">
+  <span class="reach__bignum" aria-hidden="true">02</span>
+  <div class="container reach__inner">
+    <div class="reach__head">
+      <span class="reach__number" aria-hidden="true">01</span>
+      <h2 class="reach__label">{label}</h2>
+      {intro && <p class="reach__intro">{intro}</p>}
+    </div>
+
+    <div class="reach__grid">
+      {stats.map((stat) => (
+        <div class="reach__stat">
+          <p class="reach__value">
+            {stat.prefix && <span class="reach__affix">{stat.prefix}</span>}
+            <span
+              class="reach__count"
+              data-count-to={stat.value}
+              data-count-decimals={stat.decimals ?? 0}
+            >0</span>
+            {stat.suffix && <span class="reach__affix">{stat.suffix}</span>}
+          </p>
+          <p class="reach__caption">{stat.caption}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+
+  // IntersectionObserver en vez de ScrollTrigger: evita cualquier problema de orden de
+  // inicialización con el motor Lenis/ScrollTrigger global de Layout.astro (mismo patrón
+  // que ya usa ShaderField.astro para pausar/reanudar el shader fuera de viewport).
+  function initReach() {
+    const section = document.querySelector('[data-gsap-section="reach"]');
+    if (!section) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const head = section.querySelector('.reach__head');
+    const counters = section.querySelectorAll('[data-count-to]');
+
+    if (reduced) {
+      counters.forEach((el) => {
+        const target = parseFloat(el.dataset.countTo || '0');
+        const decimals = parseInt(el.dataset.countDecimals || '0', 10);
+        el.textContent = target.toLocaleString('es-CL', {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals,
+        });
+      });
+      return;
+    }
+
+    if (head) {
+      gsap.set(head, { y: 32, opacity: 0 });
+      const headIo = new IntersectionObserver(([entry], obs) => {
+        if (!entry.isIntersecting) return;
+        obs.disconnect();
+        gsap.to(head, { y: 0, opacity: 1, duration: 0.9, ease: 'expo.out' });
+      }, { threshold: 0.3 });
+      headIo.observe(head);
+    }
+
+    counters.forEach((el, i) => {
+      const target = parseFloat(el.dataset.countTo || '0');
+      const decimals = parseInt(el.dataset.countDecimals || '0', 10);
+      const card = el.closest('.reach__stat');
+      const watchTarget = card || el;
+
+      if (card) gsap.set(card, { y: 24, opacity: 0 });
+
+      const io = new IntersectionObserver(([entry], obs) => {
+        if (!entry.isIntersecting) return;
+        obs.disconnect();
+
+        if (card) {
+          gsap.to(card, { y: 0, opacity: 1, duration: 0.8, ease: 'expo.out', delay: i * 0.08 });
+        }
+
+        const proxy = { v: 0 };
+        gsap.to(proxy, {
+          v: target,
+          duration: 1.6,
+          ease: 'power2.out',
+          delay: i * 0.08,
+          onUpdate: () => {
+            el.textContent = proxy.v.toLocaleString('es-CL', {
+              minimumFractionDigits: decimals,
+              maximumFractionDigits: decimals,
+            });
+          },
+        });
+      }, { threshold: 0.3 });
+
+      io.observe(watchTarget);
+    });
+  }
+
+  document.addEventListener('astro:page-load', initReach);
+</script>
+
+<style>
+  .reach {
+    position: relative;
+    overflow: hidden;
+    padding-block: var(--space-xl);
+    background-color: var(--bg-secondary);
+    border-block: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  }
+
+  /* Número decorativo gigante de fondo — técnica de superposición/marca (§15.5) */
+  .reach__bignum {
+    position: absolute;
+    top: 50%;
+    right: 2%;
+    transform: translateY(-50%);
+    z-index: 0;
+    font-family: var(--font-heading);
+    font-size: clamp(10rem, 32vw, 26rem);
+    line-height: 1;
+    color: color-mix(in srgb, var(--text-primary) 6%, transparent);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .reach__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  .reach__head {
+    max-width: 640px;
+  }
+
+  .reach__number {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    margin-bottom: var(--space-xs);
+  }
+
+  .reach__label {
+    font-family: var(--font-heading);
+    font-size: var(--text-h2);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    text-wrap: balance;
+  }
+
+  .reach__intro {
+    margin-top: var(--space-sm);
+    font-family: var(--font-body);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 52ch;
+  }
+
+  /* 2x2 fijo con divisores en cruz (+), no pasa a fila de 4 en desktop */
+  .reach__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+  }
+
+  .reach__stat {
+    padding: var(--space-md);
+    text-align: center;
+    border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  }
+  .reach__stat:nth-child(-n + 2) {
+    border-top: none;
+    padding-top: 0;
+  }
+  .reach__stat:nth-child(odd) {
+    border-right: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  }
+
+  .reach__value {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.15em;
+    font-family: var(--font-heading);
+    font-size: clamp(2.5rem, 7vw, 5.5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .reach__affix {
+    font-size: 0.5em;
+    color: var(--accent);
+  }
+
+  .reach__caption {
+    margin-top: var(--space-xs);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  @media (min-width: 768px) {
+    .reach__inner {
+      grid-template-columns: 1fr 1.4fr;
+      align-items: end;
+      gap: var(--space-2xl);
+    }
+  }
+</style>

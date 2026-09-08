@@ -1,0 +1,252 @@
+---
+// src/components/ContactSection.astro
+// Formato: sticky lateral (título fijo) + formulario (§16.3), distinto de los formatos previos.
+const {
+  eyebrow = '04 —',
+  title = 'Contacto',
+  intro,
+  divisions = [], // nombres de división para el select "Me interesa"
+} = Astro.props;
+---
+
+<section class="contact" id="contacto" data-gsap-section="contact">
+  <div class="contact__glow" aria-hidden="true"></div>
+
+  <div class="container contact__inner">
+    <div class="contact__sticky">
+      <span class="contact__eyebrow">{eyebrow}</span>
+      <h2 class="contact__title" data-contact-title>{title}</h2>
+      {intro && <p class="contact__intro">{intro}</p>}
+    </div>
+
+    <form class="contact__form" data-contact-form novalidate>
+      <div class="field">
+        <label for="cf-name">Nombre</label>
+        <input id="cf-name" name="name" type="text" required autocomplete="name" />
+      </div>
+
+      <div class="field">
+        <label for="cf-email">Correo</label>
+        <input id="cf-email" name="email" type="email" required autocomplete="email" />
+      </div>
+
+      <div class="field">
+        <label for="cf-division">Me interesa</label>
+        <select id="cf-division" name="division">
+          <option value="">Selecciona una división</option>
+          {divisions.map((d) => <option value={d}>{d}</option>)}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="cf-message">Mensaje</label>
+        <textarea id="cf-message" name="message" rows="4" required></textarea>
+      </div>
+
+      <button type="submit" class="contact__submit" data-contact-submit>
+        <span data-submit-label>Enviar</span>
+      </button>
+
+      <p class="contact__success" data-contact-success role="status" aria-live="polite">
+        Gracias — recibimos tu mensaje y te contactaremos pronto.
+      </p>
+    </form>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+
+  function initContact() {
+    const section = document.querySelector('[data-gsap-section="contact"]');
+    if (!section) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const title = section.querySelector('[data-contact-title]');
+    if (title && !reduced) {
+      const words = title.textContent.split(' ');
+      title.innerHTML = words.map((w) => `<span class="word-outer"><span class="word">${w}</span></span>`).join(' ');
+      gsap.from(title.querySelectorAll('.word'), {
+        y: 40, opacity: 0, stagger: 0.08, duration: 0.9, ease: 'expo.out',
+        scrollTrigger: { trigger: title, start: 'top 85%', once: true },
+      });
+    }
+
+    const submitBtn = section.querySelector('[data-contact-submit]');
+    if (submitBtn && !reduced && window.matchMedia('(pointer: fine)').matches) {
+      const qx = gsap.quickTo(submitBtn, 'x', { duration: 0.5, ease: 'power3.out' });
+      const qy = gsap.quickTo(submitBtn, 'y', { duration: 0.5, ease: 'power3.out' });
+      submitBtn.addEventListener('mousemove', (e) => {
+        const r = submitBtn.getBoundingClientRect();
+        qx((e.clientX - (r.left + r.width / 2)) * 0.3);
+        qy((e.clientY - (r.top + r.height / 2)) * 0.3);
+      });
+      submitBtn.addEventListener('mouseleave', () => {
+        gsap.to(submitBtn, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.3)' });
+      });
+    }
+
+    const form = section.querySelector('[data-contact-form]');
+    const success = section.querySelector('[data-contact-success]');
+    const label = section.querySelector('[data-submit-label]');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+        if (label) label.textContent = 'Enviado ✓';
+        submitBtn?.setAttribute('disabled', 'true');
+        success?.classList.add('is-visible');
+        if (!reduced) {
+          gsap.fromTo(success, { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'expo.out' });
+        }
+      });
+    }
+  }
+
+  document.addEventListener('astro:page-load', initContact);
+</script>
+
+<style>
+  .contact {
+    position: relative;
+    overflow: hidden;
+    padding-block: var(--space-2xl);
+    background-color: var(--bg-primary);
+  }
+
+  .contact__glow {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(50% 60% at 80% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 65%),
+      radial-gradient(45% 50% at 0% 100%, color-mix(in srgb, var(--bg-secondary) 90%, var(--accent)), transparent 70%);
+  }
+
+  .contact__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  .contact__sticky {
+    align-self: start;
+  }
+
+  .contact__eyebrow {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    margin-bottom: var(--space-xs);
+  }
+
+  .contact__title {
+    font-family: var(--font-heading);
+    font-size: clamp(2.25rem, 6vw, 4.5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.25em;
+  }
+  .contact__title :global(.word-outer) { overflow: hidden; display: inline-block; padding-bottom: 0.06em; }
+  .contact__title :global(.word) { display: block; }
+
+  .contact__intro {
+    margin-top: var(--space-md);
+    font-family: var(--font-body);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 40ch;
+  }
+
+  .contact__form {
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .field {
+    display: grid;
+    gap: var(--space-xs);
+  }
+
+  .field label {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    padding-block: var(--space-xs);
+    outline: none;
+    transition: border-color var(--transition-fast);
+  }
+
+  .field select option {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .field textarea { resize: vertical; }
+
+  .contact__submit {
+    justify-self: start;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--text-base);
+    letter-spacing: 0.03em;
+    color: var(--bg-primary);
+    background-color: var(--accent);
+    border: none;
+    padding: var(--space-sm) var(--space-xl);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+  }
+  .contact__submit:hover { background-color: var(--accent-hover); }
+  .contact__submit:disabled { opacity: 0.7; cursor: default; }
+
+  .contact__success {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--accent);
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+  }
+  .contact__success.is-visible {
+    opacity: 1;
+    height: auto;
+  }
+
+  @media (min-width: 768px) {
+    .contact__inner {
+      grid-template-columns: 1fr 1.2fr;
+      gap: var(--space-2xl);
+    }
+    .contact__sticky {
+      position: sticky;
+      top: calc(var(--space-2xl) + 4rem);
+    }
+  }
+</style>

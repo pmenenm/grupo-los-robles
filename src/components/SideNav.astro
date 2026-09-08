@@ -1,0 +1,276 @@
+---
+// src/components/SideNav.astro
+// Menú lateral de alto nivel — reemplaza el nav horizontal + overlay móvil.
+// Se abre/cierra vía CustomEvent 'sidenav:toggle' despachado por Header.astro.
+import siteEs from '../../contracts/site.json';
+import siteEn from '../../contracts/site.en.json';
+
+const { locale = 'es' } = Astro.props;
+const site = locale === 'en' ? siteEn : siteEs;
+const t = locale === 'en'
+  ? { menuLabel: 'Main menu', navLabel: 'Main navigation', closeLabel: 'Close menu', brands: 'Our Brands', cta: 'Contact us →' }
+  : { menuLabel: 'Menú principal', navLabel: 'Navegación principal', closeLabel: 'Cerrar menú', brands: 'Nuestras Marcas', cta: 'Contáctanos →' };
+
+const nav = site.navigation ?? [];
+const brands = site.footerLinks ?? [];
+const social = site.social ?? [];
+const orderUrl = site.orderUrl ?? '#';
+---
+
+<div class="sidenav" id="sidenav" data-sidenav hidden aria-hidden="true">
+  <aside class="sidenav__panel" role="dialog" aria-modal="true" aria-label={t.menuLabel}>
+    <img class="sidenav__bg" src="/images/lujo-silencioso/hero-interior.jpg" alt="" aria-hidden="true" loading="lazy" />
+
+    <div class="sidenav__container">
+      <button class="sidenav__close" data-sidenav-close aria-label={t.closeLabel}>
+        <span></span><span></span>
+      </button>
+
+      <div class="sidenav__middle">
+        <nav class="sidenav__nav" aria-label={t.navLabel}>
+          <ul role="list">
+            {nav.map((item) => (
+              <li>
+                <a href={item.href} data-sidenav-link>
+                  <span class="sidenav__label">{item.label}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {brands.length > 0 && (
+          <div class="sidenav__group sidenav__group--brands">
+            <h3>{t.brands}</h3>
+            <ul role="list">
+              {brands.map((b) => (
+                <li><a href={b.href} target="_blank" rel="noopener noreferrer">{b.label}</a></li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      <div class="sidenav__foot-row">
+        {social.length > 0 && (
+          <ul class="sidenav__social" role="list">
+            {social.map((s) => (
+              <li><a href={s.href} target="_blank" rel="noopener noreferrer">{s.label}</a></li>
+            ))}
+          </ul>
+        )}
+        <a href={orderUrl} class="sidenav__cta" data-sidenav-link>{t.cta}</a>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+  import { gsap } from 'gsap';
+
+  function initSideNav() {
+    const root = document.querySelector('[data-sidenav]');
+    const closeBtn = document.querySelector('[data-sidenav-close]');
+    const links = document.querySelectorAll('[data-sidenav-link]');
+    const panel = document.querySelector('.sidenav__panel');
+    if (!root || !panel) return;
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let isOpen = false;
+
+    const open = () => {
+      if (isOpen) return;
+      isOpen = true;
+      root.hidden = false;
+      root.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => root.classList.add('is-open'));
+
+      if (!reduced) {
+        const items = panel.querySelectorAll('.sidenav__nav li');
+        gsap.fromTo(
+          items,
+          { y: 24, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, ease: 'expo.out', stagger: 0.05, delay: 0.15 }
+        );
+      }
+    };
+
+    const close = () => {
+      if (!isOpen) return;
+      isOpen = false;
+      root.classList.remove('is-open');
+      root.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      document.dispatchEvent(new CustomEvent('sidenav:closed'));
+      const done = () => { root.hidden = true; };
+      if (reduced) done();
+      else setTimeout(done, 500);
+    };
+
+    closeBtn?.addEventListener('click', close);
+    links.forEach((a) => a.addEventListener('click', close));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    document.addEventListener('sidenav:toggle', () => (isOpen ? close() : open()));
+    document.addEventListener('astro:before-swap', () => { document.body.style.overflow = ''; }, { once: true });
+  }
+
+  document.addEventListener('astro:page-load', initSideNav);
+</script>
+
+<style>
+  .sidenav {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+  }
+  .sidenav[hidden] { display: none; }
+
+  /* Overlay a pantalla completa que se despliega de arriba hacia abajo — ref. lingers.it,
+     recreado en modo claro con nuestros propios tokens/contenido/fotografía. */
+  .sidenav__panel {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background-color: color-mix(in srgb, var(--bg-primary) 96%, transparent);
+    backdrop-filter: blur(20px);
+    transform: translateY(-100%);
+    transition: transform 0.6s var(--ease-expo);
+    isolation: isolate;
+  }
+  .sidenav.is-open .sidenav__panel { transform: translateY(0); }
+
+  /* Fotografía tenue detrás del menú — "ventana" que invita a sumergirse (ref. lingers.it),
+     en modo claro: apenas insinuada bajo el papel del tema. */
+  .sidenav__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.1;
+    filter: grayscale(0.4);
+  }
+
+  .sidenav__container {
+    min-height: 100%;
+    max-width: calc(var(--container-max) + var(--space-2xl) * 2);
+    margin-inline: auto;
+    padding: var(--space-lg) var(--container-pad) var(--space-xl);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidenav__close {
+    align-self: flex-end;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    flex: none;
+  }
+  .sidenav__close span {
+    display: block;
+    width: 16px;
+    height: 1px;
+    background-color: var(--text-primary);
+  }
+  .sidenav__close span:first-child { transform: translateY(3px) rotate(45deg); }
+  .sidenav__close span:last-child { transform: translateY(-3px) rotate(-45deg); }
+
+  /* Fila central: nav a la izquierda, marcas a la derecha — flex:1 + align-items:center
+     centra verticalmente ambas columnas dentro del espacio disponible (mismo aire arriba y abajo). */
+  .sidenav__middle {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-xl);
+  }
+
+  .sidenav__nav ul { list-style: none; display: grid; gap: var(--space-xs); }
+  .sidenav__nav a {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-sm);
+    padding-block: var(--space-xs);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    transition: gap var(--transition-fast);
+  }
+  .sidenav__nav a:hover { gap: var(--space-md); }
+  .sidenav__nav a:hover .sidenav__label { color: var(--text-primary); }
+
+  .sidenav__label {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    font-size: clamp(1.02rem, 3.06vw, 2.04rem);
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--accent);
+    transition: color var(--transition-fast);
+  }
+
+  .sidenav__group--brands {
+    flex: none;
+  }
+  .sidenav__group h3 {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+  }
+  .sidenav__group ul { list-style: none; display: grid; gap: 4px; }
+  .sidenav__group a {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  .sidenav__group a:hover { color: var(--accent); }
+
+  .sidenav__foot-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--border);
+  }
+
+  .sidenav__social { list-style: none; display: flex; gap: var(--space-sm); }
+  .sidenav__social a {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  .sidenav__social a:hover { color: var(--accent); }
+
+  .sidenav__cta {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .sidenav__cta:hover { color: var(--accent-hover); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sidenav__panel { transition: opacity 0.2s linear; transform: none; opacity: 0; pointer-events: none; }
+    .sidenav.is-open .sidenav__panel { opacity: 1; pointer-events: auto; }
+  }
+</style>

@@ -1,0 +1,196 @@
+---
+// src/pages/index.astro — Grupo Los Robles
+import Layout from '../layouts/Layout.astro';
+import Hero3D from '../components/Hero3D.astro';
+import ReachStats from '../components/ReachStats.astro';
+import IndustriesSection from '../components/IndustriesSection.astro';
+import ManifestoSection from '../components/ManifestoSection.astro';
+import ContactSection from '../components/ContactSection.astro';
+
+const _seo = {
+  title: 'Grupo Los Robles — 20+ años transformando ideas en realidades sólidas',
+  description:
+    'Holding con más de 20 años de trayectoria en Gastronomía, Vestuario, Agrícola, Soluciones Tecnológicas e Inmobiliaria.',
+  ogImage: '/images/2sector-gastro.webp',
+  googleFontsUrl:
+    "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap",
+};
+
+const _schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Grupo Los Robles',
+  url: 'https://grupolosrobles.com',
+  logo: 'https://grupolosrobles.com/images/logo-losRobles.webp',
+  description:
+    'Holding con más de 20 años de trayectoria en Gastronomía, Vestuario, Agrícola, Soluciones Tecnológicas e Inmobiliaria.',
+};
+
+const _hero = {
+  eyebrow: '+20 años',
+  headline: 'Ideas que hoy son realidades sólidas',
+  subheadline:
+    'Empresas líderes en el mercado — construidas con la misma convicción en vestuario, gastronomía, agrícola, tecnología e inmobiliaria.',
+  ctaText: 'Conoce nuestras divisiones',
+  ctaHref: '#tecnologia',
+  backgroundImage: '/images/2sector-gastro.webp',
+};
+
+const _reach = {
+  label: 'Nuestro Alcance',
+  intro:
+    'Dos décadas de experiencia acumulada nos han permitido crecer con solidez en vestuario, gastronomía, inmobiliaria y agrícola.',
+  stats: [
+    { prefix: '+', value: 150, caption: 'Nuevas sucursales' },
+    { value: 5, caption: 'Sectores distintos' },
+    { prefix: '+', value: 3500, caption: 'Empleados' },
+    { prefix: '+', value: 40, caption: 'Marcas activas' },
+  ],
+};
+
+const _industries = {
+  label: 'Nuestras Divisiones',
+  divisions: [
+    {
+      id: 'tecnologia',
+      number: '01',
+      name: 'Soluciones Tecnológicas',
+      description:
+        'Dot Solutions: soluciones tecnológicas que optimizan operaciones y potencian decisiones inteligentes a través de plataformas BI, gestión de ventas y fidelización.',
+      image: '/images/1sector-ti.webp',
+      alt: 'División de Soluciones Tecnológicas — Dot Solutions',
+      ctaLabel: 'Visitar Dot Solutions',
+      ctaHref: 'https://dotsolutions.io',
+    },
+    {
+      id: 'gastronomia',
+      number: '02',
+      name: 'Gastronomía',
+      description:
+        'Líderes del sector gastronómico, con el objetivo de ofrecer experiencias únicas con la mejor calidad y un servicio inigualable.',
+      image: '/images/2sector-gastro.webp',
+      alt: 'División Gastronómica de Grupo Los Robles',
+      ctaLabel: 'Visitar Grupo Mil Sabores',
+      ctaHref: 'https://grupomilsabores.cl',
+    },
+    {
+      id: 'vestuario',
+      number: '03',
+      name: 'Vestuario',
+      description:
+        'Pasión por la moda y el estilo de vida premium: especialistas en representar marcas internacionales de vestuario y accesorios reconocidas, con presencia en todo Chile a través de tiendas propias y venta mayorista.',
+      image: '/images/3sector-vestuario.webp',
+      alt: 'División de Vestuario de Grupo Los Robles',
+      brands: [
+        {
+          name: 'BOSS',
+          locations: ['Costanera Center', 'Altos Las Condes', 'Falabella Parque Arauco', 'Plaza Antofagasta', 'Buenaventura'],
+        },
+        {
+          name: 'HUGO',
+          locations: ['Parque Arauco', 'Costanera Center'],
+        },
+        {
+          name: 'GEOX',
+          locations: ['Parque Arauco'],
+          note: 'próximamente',
+        },
+      ],
+      ctaLabel: 'Ecommerce · hugoboss.cl',
+      ctaHref: 'https://www.hugoboss.cl',
+    },
+    {
+      id: 'agricola',
+      number: '04',
+      name: 'Agrícola',
+      description:
+        'Valbifrut: más de 30 años de liderazgo en la industria de la nuez, entre los principales productores, exportadores y procesadores a nivel mundial — el segundo mayor exportador de nueces de Chile.',
+      image: '/images/4sector-agricola.webp',
+      alt: 'División Agrícola — Valbifrut',
+      ctaLabel: 'Visitar Valbifrut',
+      ctaHref: 'https://valbifrut.cl',
+    },
+    {
+      id: 'inmobiliaria',
+      number: '05',
+      name: 'Inmobiliaria',
+      description:
+        'Evaluamos terreno, factibilidad económica, ubicación, diseño, análisis de mercado y plazos de ejecución para desarrollar oficinas y locales comerciales bien ubicados, con excelente conectividad y flujo.',
+      image: '/images/5sector-inmobiliaria.webp',
+      alt: 'División Inmobiliaria de Grupo Los Robles',
+      projects: [
+        'Neocisterna — "Espacios urbanos para vivir mejor": 19 pisos, 179 departamentos, piscina exterior, cocina gourmet y áreas de juegos',
+        'Los Robles Inversiones — Av. El Bosque, Daniel Hernández N°307',
+        'Fundo El Sauce — Lotes 1A y 1B, urbano',
+        'Planta de Producción ADL',
+        'Centro Industrial El Belloto',
+        'Playa Madre · Donde Gastón',
+      ],
+      gallery: [
+        '/images/neocisterna/1103d75a.webp',
+        '/images/neocisterna/2a71e706.webp',
+        '/images/neocisterna/3e5eb35b.webp',
+        '/images/neocisterna/3e77979d.webp',
+      ],
+      ctaLabel: 'Contáctanos',
+      ctaHref: '#contacto',
+    },
+  ],
+};
+
+const _manifesto = {
+  eyebrow: '—',
+  lines: [
+    'Hace más de 20 años, una idea se convirtió en raíz.',
+    'Hoy Grupo Los Robles crece en cinco direcciones distintas',
+    '— gastronomía, vestuario, agrícola, tecnología e inmobiliaria —',
+    'con una misma convicción: transformar ideas en realidades sólidas',
+    'y empresas líderes en el mercado.',
+  ],
+};
+
+const _contact = {
+  eyebrow: '05 —',
+  title: 'Contacto',
+  intro: 'Conversemos sobre tu próximo proyecto o alianza con alguna de nuestras marcas.',
+  divisions: [
+    'Soluciones Tecnológicas',
+    'Gastronomía',
+    'Vestuario',
+    'Agrícola',
+    'Inmobiliaria',
+    'Otro',
+  ],
+};
+---
+
+<Layout
+  title={_seo.title}
+  description={_seo.description}
+  image={_seo.ogImage}
+  googleFontsUrl={_seo.googleFontsUrl}
+  schemaData={_schema}
+>
+  <div id="inicio">
+    <Hero3D
+      eyebrow={_hero.eyebrow}
+      headline={_hero.headline}
+      subheadline={_hero.subheadline}
+      ctaText={_hero.ctaText}
+      ctaHref={_hero.ctaHref}
+    />
+  </div>
+
+  <ReachStats label={_reach.label} intro={_reach.intro} stats={_reach.stats} />
+
+  <IndustriesSection label={_industries.label} divisions={_industries.divisions} />
+
+  <ManifestoSection eyebrow={_manifesto.eyebrow} lines={_manifesto.lines} />
+
+  <ContactSection
+    eyebrow={_contact.eyebrow}
+    title={_contact.title}
+    intro={_contact.intro}
+    divisions={_contact.divisions}
+  />
+</Layout>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grupo Los Robles — Portafolio</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          serif: ['"Playfair Display"', 'ui-serif', 'Georgia', 'serif'],
+          sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        },
+        colors: {
+          cream: '#FAF6EF',
+          sand: '#EFE6D6',
+          ink: '#100F0C',
+        },
+        letterSpacing: {
+          widest2: '0.28em',
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  html { scroll-behavior: smooth; }
+  body { background-color: #FAF6EF; color: #100F0C; }
+
+  .navbar { transition: background-color .5s ease, border-color .5s ease, box-shadow .5s ease, padding .4s ease; }
+  .navbar.scrolled { background-color: rgba(250,246,239,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(16,15,12,0.08); box-shadow: 0 1px 0 rgba(16,15,12,0.02); }
+  .navbar.scrolled .nav-inner { padding-top: 1rem; padding-bottom: 1rem; }
+  .navbar:not(.scrolled) .nav-inner { padding-top: 2rem; padding-bottom: 2rem; }
+
+  .fade-up { opacity: 0; transform: translateY(18px); transition: opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1); }
+  .fade-up.in { opacity: 1; transform: translateY(0); }
+
+  .hairline { border-color: rgba(16,15,12,0.14); }
+
+  .tile-overlay { background: linear-gradient(180deg, rgba(16,15,12,0) 40%, rgba(16,15,12,0.72) 100%); }
+
+  #mobile-menu { transition: opacity .4s ease, visibility .4s ease; }
+  #mobile-menu.hidden-menu { opacity: 0; visibility: hidden; pointer-events: none; }
+</style>
+</head>
+
+<body class="antialiased">
+
+  <!-- ============ NAVBAR ============ -->
+  <header id="navbar" class="navbar fixed top-0 left-0 right-0 z-50">
+    <div class="nav-inner max-w-[1400px] mx-auto px-6 md:px-10 flex items-center justify-between">
+      <a href="#" class="font-serif text-lg md:text-xl tracking-[0.12em] uppercase">Grupo Los Robles</a>
+
+      <nav class="hidden md:flex items-center gap-10 font-sans text-[13px] tracking-[0.1em] uppercase text-ink/80">
+        <a href="#nosotros" class="hover:text-ink transition-colors">Nosotros</a>
+        <a href="#divisiones" class="hover:text-ink transition-colors">Divisiones</a>
+        <a href="#contacto" class="hover:text-ink transition-colors">Contacto</a>
+      </nav>
+
+      <a href="#contacto" class="hidden md:inline-block font-sans text-[12px] tracking-[0.1em] uppercase border border-ink px-5 py-2.5 hover:bg-ink hover:text-cream transition-colors">
+        Contacto
+      </a>
+
+      <button id="menu-toggle" class="md:hidden flex flex-col gap-1.5 w-7" aria-label="Abrir menú">
+        <span class="block h-px w-full bg-ink"></span>
+        <span class="block h-px w-full bg-ink"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile menu overlay -->
+  <div id="mobile-menu" class="hidden-menu fixed inset-0 z-40 bg-cream flex flex-col items-center justify-center gap-10">
+    <a href="#nosotros" class="mobile-link font-serif text-3xl">Nosotros</a>
+    <a href="#divisiones" class="mobile-link font-serif text-3xl">Divisiones</a>
+    <a href="#contacto" class="mobile-link font-serif text-3xl">Contacto</a>
+  </div>
+
+  <!-- ============ HERO ============ -->
+  <section class="relative min-h-screen flex items-end overflow-hidden">
+    <img
+      src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2000&q=80"
+      alt="Interior arquitectónico minimalista"
+      class="absolute inset-0 w-full h-full object-cover"
+    >
+    <div class="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-ink/25"></div>
+
+    <div class="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-10 pb-24 md:pb-32 pt-40">
+      <p class="fade-up font-sans text-[12px] md:text-[13px] tracking-widest2 uppercase text-cream/80 mb-6 md:mb-8">
+        Grupo Los Robles — Más de 20 años de trayectoria
+      </p>
+      <h1 class="fade-up font-serif text-cream text-[2.6rem] leading-[1.08] sm:text-6xl md:text-7xl lg:text-8xl max-w-4xl">
+        Cuatro industrias.<br class="hidden sm:block"> Un mismo estándar<br class="hidden sm:block"> de excelencia.
+      </h1>
+      <p class="fade-up font-sans text-cream/85 text-base md:text-lg max-w-xl mt-8 md:mt-10 font-light leading-relaxed">
+        Un holding chileno que invierte, opera y hace crecer marcas líderes en gastronomía, moda,
+        agroindustria y bienes raíces — en Chile y Perú.
+      </p>
+      <a href="#divisiones" class="fade-up inline-block mt-10 md:mt-12 font-sans text-[12px] tracking-[0.14em] uppercase text-cream border border-cream/80 px-8 py-4 hover:bg-cream hover:text-ink transition-colors">
+        Descubra nuestro portafolio
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ SOBRE NOSOTROS ============ -->
+  <section id="nosotros" class="max-w-[1400px] mx-auto px-6 md:px-10 py-28 md:py-40">
+    <div class="grid md:grid-cols-12 gap-y-14 gap-x-16 items-center">
+
+      <div class="md:col-span-5 fade-up">
+        <p class="font-sans text-[12px] tracking-widest2 uppercase text-ink/50 mb-6">Sobre nosotros</p>
+        <h2 class="font-serif text-4xl md:text-5xl leading-[1.15] mb-8">
+          Veinte años construyendo con visión de largo plazo.
+        </h2>
+        <p class="font-sans text-ink/70 leading-relaxed mb-6 font-light">
+          Desde Chile hacia Perú, Grupo Los Robles ha consolidado un portafolio diversificado de
+          inversiones, combinando disciplina financiera con una convicción operativa profunda en
+          cada industria en la que participa.
+        </p>
+        <p class="font-sans text-ink/70 leading-relaxed font-light">
+          No perseguimos tendencias: construimos posiciones de liderazgo sostenibles, con socios y
+          marcas que comparten el mismo criterio de excelencia y permanencia.
+        </p>
+
+        <div class="grid grid-cols-3 gap-8 mt-14 pt-10 border-t hairline">
+          <div>
+            <p class="font-serif text-3xl md:text-4xl">20+</p>
+            <p class="font-sans text-[11px] tracking-[0.1em] uppercase text-ink/50 mt-2">Años</p>
+          </div>
+          <div>
+            <p class="font-serif text-3xl md:text-4xl">2</p>
+            <p class="font-sans text-[11px] tracking-[0.1em] uppercase text-ink/50 mt-2">Países</p>
+          </div>
+          <div>
+            <p class="font-serif text-3xl md:text-4xl">4</p>
+            <p class="font-sans text-[11px] tracking-[0.1em] uppercase text-ink/50 mt-2">Industrias</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="md:col-span-7 fade-up">
+        <img
+          src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80"
+          alt="Arquitectura corporativa"
+          class="w-full h-[420px] md:h-[560px] object-cover"
+        >
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ NUESTRAS DIVISIONES ============ -->
+  <section id="divisiones" class="bg-sand/50 py-28 md:py-40">
+    <div class="max-w-[1400px] mx-auto px-6 md:px-10">
+
+      <div class="fade-up mb-16 md:mb-20 max-w-2xl">
+        <p class="font-sans text-[12px] tracking-widest2 uppercase text-ink/50 mb-6">Nuestras divisiones</p>
+        <h2 class="font-serif text-4xl md:text-5xl leading-[1.15]">Un portafolio, cuatro vocaciones.</h2>
+      </div>
+
+      <!-- Fila 1 — Gastronomía + Vestuario (protagonistas) -->
+      <div class="grid md:grid-cols-12 gap-6 md:gap-8 mb-6 md:mb-8">
+
+        <a href="#" class="fade-up group relative md:col-span-7 h-[420px] md:h-[600px] overflow-hidden block">
+          <img
+            src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1600&q=80"
+            alt="Gastronomía — alta cocina"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-105"
+          >
+          <div class="tile-overlay absolute inset-0"></div>
+          <div class="relative z-10 h-full flex flex-col justify-end p-8 md:p-12">
+            <p class="font-sans text-[12px] tracking-widest2 uppercase text-cream/70 mb-3">01 — Gastronomía</p>
+            <h3 class="font-serif text-cream text-3xl md:text-4xl mb-4">Mil Sabores</h3>
+            <p class="font-sans text-cream/80 text-sm font-light">Muu Stick · Tanta · Barra Chalaca</p>
+          </div>
+        </a>
+
+        <a href="#" class="fade-up group relative md:col-span-5 h-[420px] md:h-[600px] overflow-hidden block">
+          <img
+            src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1600&q=80"
+            alt="Vestuario retail — boutique de moda"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-105"
+          >
+          <div class="tile-overlay absolute inset-0"></div>
+          <div class="relative z-10 h-full flex flex-col justify-end p-8 md:p-12">
+            <p class="font-sans text-[12px] tracking-widest2 uppercase text-cream/70 mb-3">02 — Vestuario Retail</p>
+            <h3 class="font-serif text-cream text-3xl md:text-4xl mb-4">Casas de moda</h3>
+            <p class="font-sans text-cream/80 text-sm font-light">Hugo Boss · Dior</p>
+          </div>
+        </a>
+
+      </div>
+
+      <!-- Fila 2 — Agrícola + Inmobiliario (secundarias) -->
+      <div class="grid md:grid-cols-12 gap-6 md:gap-8">
+
+        <a href="#" class="fade-up group relative md:col-span-6 h-[300px] md:h-[380px] overflow-hidden block">
+          <img
+            src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1600&q=80"
+            alt="Agrícola — campos y huertos"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-105"
+          >
+          <div class="tile-overlay absolute inset-0"></div>
+          <div class="relative z-10 h-full flex flex-col justify-end p-8 md:p-10">
+            <p class="font-sans text-[12px] tracking-widest2 uppercase text-cream/70 mb-3">03 — Agrícola</p>
+            <h3 class="font-serif text-cream text-2xl md:text-3xl">Valbifrut</h3>
+          </div>
+        </a>
+
+        <a href="#" class="fade-up group relative md:col-span-6 h-[300px] md:h-[380px] overflow-hidden block">
+          <img
+            src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=1600&q=80"
+            alt="Inmobiliario — desarrollo urbano"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-105"
+          >
+          <div class="tile-overlay absolute inset-0"></div>
+          <div class="relative z-10 h-full flex flex-col justify-end p-8 md:p-10">
+            <p class="font-sans text-[12px] tracking-widest2 uppercase text-cream/70 mb-3">04 — Inmobiliario</p>
+            <h3 class="font-serif text-cream text-2xl md:text-3xl">Desarrollo urbano</h3>
+          </div>
+        </a>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ CIERRE ============ -->
+  <section id="contacto" class="max-w-[1400px] mx-auto px-6 md:px-10 py-28 md:py-40 text-center">
+    <p class="fade-up font-sans text-[12px] tracking-widest2 uppercase text-ink/50 mb-6">Trabajemos juntos</p>
+    <h2 class="fade-up font-serif text-4xl md:text-6xl leading-[1.15] max-w-3xl mx-auto mb-10">
+      Inversionistas, socios y talento excepcional — conversemos.
+    </h2>
+    <a href="mailto:contacto@grupolosrobles.com" class="fade-up inline-block font-sans text-[12px] tracking-[0.14em] uppercase border border-ink px-8 py-4 hover:bg-ink hover:text-cream transition-colors">
+      Escríbanos
+    </a>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="border-t hairline">
+    <div class="max-w-[1400px] mx-auto px-6 md:px-10 py-16 md:py-20">
+      <div class="grid md:grid-cols-12 gap-12 md:gap-8">
+
+        <div class="md:col-span-4">
+          <p class="font-serif text-xl tracking-[0.08em] uppercase mb-4">Grupo Los Robles</p>
+          <p class="font-sans text-sm text-ink/55 font-light max-w-xs">
+            Holding chileno de inversiones en gastronomía, moda, agroindustria y bienes raíces.
+          </p>
+        </div>
+
+        <div class="md:col-span-2 md:col-start-7">
+          <p class="font-sans text-[11px] tracking-[0.1em] uppercase text-ink/40 mb-5">Divisiones</p>
+          <ul class="font-sans text-sm text-ink/70 space-y-3 font-light">
+            <li><a href="#" class="hover:text-ink transition-colors">Gastronomía</a></li>
+            <li><a href="#" class="hover:text-ink transition-colors">Vestuario Retail</a></li>
+            <li><a href="#" class="hover:text-ink transition-colors">Agrícola</a></li>
+            <li><a href="#" class="hover:text-ink transition-colors">Inmobiliario</a></li>
+          </ul>
+        </div>
+
+        <div class="md:col-span-2">
+          <p class="font-sans text-[11px] tracking-[0.1em] uppercase text-ink/40 mb-5">Compañía</p>
+          <ul class="font-sans text-sm text-ink/70 space-y-3 font-light">
+            <li><a href="#nosotros" class="hover:text-ink transition-colors">Nosotros</a></li>
+            <li><a href="#contacto" class="hover:text-ink transition-colors">Contacto</a></li>
+          </ul>
+        </div>
+
+        <div class="md:col-span-3">
+          <p class="font-sans text-[11px] tracking-[0.1em] uppercase text-ink/40 mb-5">Contacto</p>
+          <ul class="font-sans text-sm text-ink/70 space-y-3 font-light">
+            <li>Santiago, Chile</li>
+            <li>contacto@grupolosrobles.com</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="mt-16 pt-8 border-t hairline flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <p class="font-sans text-[11px] text-ink/40">© 2026 Grupo Los Robles. Todos los derechos reservados.</p>
+        <p class="font-sans text-[11px] text-ink/40">Santiago — Lima</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const navbar = document.getElementById('navbar');
+    const onScroll = () => {
+      if (window.scrollY > 40) navbar.classList.add('scrolled');
+      else navbar.classList.remove('scrolled');
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    menuToggle.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden-menu');
+    });
+    document.querySelectorAll('.mobile-link').forEach(a => {
+      a.addEventListener('click', () => mobileMenu.classList.add('hidden-menu'));
+    });
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.fade-up').forEach(el => io.observe(el));
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,191 @@
+---
+// src/pages/index.astro — Grupo Los Robles
+// Dirección "Lujo Silencioso" — ver docs/referentes-diseno.md y docs/arquitectura-informacion.md.
+// Checkpoint: Header + SideNav ("ventana lateral") + Hero (vitrina) + Divisiones + Manifiesto.
+// Pendiente (bloqueante, no se inventa — ver docs/arquitectura-informacion.md): cifras reales de
+// "Nuestro Alcance", contacto real, contenido definitivo de Inmobiliaria y Gastronomía.
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/Hero.astro';
+import IndustriesGallery from '../components/IndustriesGallery.astro';
+import ManifestoSection from '../components/ManifestoSection.astro';
+import ContactReveal from '../components/ContactReveal.astro';
+import VideoHero from '../components/VideoHero.astro';
+import site from '../../contracts/site.json';
+
+const _seo = {
+  title: `${site.site.siteName} · ${site.site.tagline}`,
+  description: site.organizationSchema.description,
+  ogImage: site.site.defaultOgImage,
+  googleFontsUrl:
+    'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap',
+};
+
+const _schema = site.organizationSchema;
+
+const _hero = {
+  eyebrow: 'Grupo Los Robles, más de 20 años de trayectoria',
+  headline: 'Cinco industrias.<br/>Un mismo estándar<br/>de excelencia.',
+  subheadline:
+    'Un holding chileno que invierte, opera y hace crecer marcas líderes en gastronomía, moda, agroindustria, tecnología e inmobiliaria.',
+  ctaText: 'Descubra nuestro portafolio',
+  ctaHref: '#divisiones',
+  images: [
+    { src: '/images/lujo-silencioso/hero-interior.jpg', alt: 'Interior arquitectónico minimalista' },
+    { src: '/images/lujo-silencioso/hero-agricola.jpg', alt: 'Campos agrícolas al atardecer' },
+    { src: '/images/lujo-silencioso/hero-vestuario.jpg', alt: 'Boutique de moda minimalista' },
+  ],
+};
+
+const _divisions = [
+  {
+    id: 'gastronomia',
+    number: '01',
+    name: 'Gastronomía',
+    description:
+      'A través de Mil Sabores, operamos conceptos gastronómicos con identidad propia, cada uno con un estándar de calidad y servicio consistente.',
+    image: '/images/lujo-silencioso/division-gastronomia.jpg',
+    alt: 'Plato de alta gastronomía servido con estilo minimalista',
+    featured: true,
+    brands: [
+      { name: 'Osaka', logo: '/images/logos/osaka.png' },
+      { name: 'La Mar', logo: '/images/logos/la-mar.png' },
+      { name: 'Panchita', logo: '/images/logos/panchita.png' },
+      { name: 'Tanta', logo: '/images/logos/tanta.png' },
+      { name: 'Muu Steak', logo: '/images/logos/muu-steak.png' },
+      { name: 'Badass', logo: '/images/logos/badass.png' },
+      { name: 'El Japonés', logo: '/images/logos/el-japones.png' },
+      { name: 'Mamma Mia', logo: '/images/logos/mamma-mia.png' },
+      { name: 'Mesón del Marinero', logo: '/images/logos/meson-del-marinero.png' },
+      { name: 'Kairos Garden', logo: '/images/logos/kairos-garden.png' },
+      { name: 'La Piazza', logo: '/images/logos/la-piazza.png' },
+      { name: 'Take a Wok', logo: '/images/logos/take-a-wok.png' },
+      { name: 'Fuente Suiza', logo: '/images/logos/fuente-suiza.png' },
+      { name: 'Pizzería La Argentina', logo: '/images/logos/la-argentina.png' },
+      { name: 'Sky Bar & Coffee 300', logo: '/images/logos/sky-300.png' },
+      { name: 'Siete Cortes', logo: '/images/logos/siete-cortes.png' },
+      { name: 'La Sanguchera', logo: '/images/logos/la-sanguchera.png' },
+      { name: 'Dulce Luna', logo: '/images/logos/dulce-luna.png' },
+      { name: 'Lady Focaccia', logo: '/images/logos/lady-focaccia.png' },
+      { name: 'Udon', logo: '/images/logos/udon.png' },
+      { name: 'Milá', logo: '/images/logos/mila.png' },
+      { name: 'El Bodegón', logo: '/images/logos/el-bodegon.png' },
+      { name: 'Jalisco', logo: '/images/logos/jalisco.png' },
+      { name: 'Barra Chalaca', logo: '/images/logos/barra-chalaca.png' },
+      { name: 'Frida Kahlo', logo: '/images/logos/frida-kahlo.png' },
+      { name: 'Havanna', logo: '/images/logos/havanna.png' },
+      { name: 'Enrique Tomás', logo: '/images/logos/enrique-tomas.png' },
+      { name: 'Mooi', logo: '/images/logos/mooi.png' },
+      { name: 'Muu Grill', logo: '/images/logos/muu-grill.png' },
+    ],
+  },
+  {
+    id: 'vestuario',
+    number: '02',
+    name: 'Vestuario Retail',
+    description:
+      'Representamos y operamos en Chile marcas globales de vestuario y accesorios, con presencia en los principales centros comerciales del país.',
+    image: '/images/lujo-silencioso/division-vestuario.jpg',
+    alt: 'Detalle de boutique de moda minimalista',
+    featured: true,
+    brands: [
+      { name: 'BOSS', locations: ['Costanera Center', 'Parque Arauco', 'Plaza Antofagasta'] },
+      { name: 'HUGO', locations: ['Parque Arauco', 'Costanera Center'] },
+      { name: 'GEOX', locations: ['Parque Arauco'] },
+    ],
+    ctaLabel: 'Visitar hugoboss.cl',
+    ctaHref: 'https://www.hugoboss.cl',
+  },
+  {
+    id: 'agricola',
+    number: '03',
+    name: 'Agrícola',
+    description:
+      'Con más de 30 años de trayectoria, Valbifrut es la segunda mayor exportadora de nueces de Chile. Liderazgo construido con visión de largo plazo sobre la tierra.',
+    image: '/images/lujo-silencioso/division-agricola.jpg',
+    alt: 'Nueces sobre superficie de madera, luz cálida',
+    ctaLabel: 'Visitar valbifrut.cl',
+    ctaHref: 'https://valbifrut.cl',
+  },
+  {
+    id: 'tecnologia',
+    number: '04',
+    name: 'Soluciones Tecnológicas',
+    description:
+      'Dot Solutions desarrolla plataformas de inteligencia de negocio, gestión de ventas y fidelización para compañías que operan a gran escala.',
+    image: '/images/lujo-silencioso/division-tecnologica.jpg',
+    alt: 'Escritorio minimalista con laptop cerrado',
+    ctaLabel: 'Visitar dotsolutions.io',
+    ctaHref: 'https://dotsolutions.io',
+  },
+  {
+    id: 'inmobiliaria',
+    number: '05',
+    name: 'Inmobiliaria',
+    description:
+      'Gestionamos y desarrollamos proyectos comerciales y de oficinas, priorizando ubicaciones con excelente conectividad y flujo.',
+    image: '/images/lujo-silencioso/division-inmobiliario.jpg',
+    alt: 'Fachada arquitectónica moderna al atardecer',
+    projects: ['Los Robles Investments', 'Inmobiliaria Los Nogales', 'Inmobiliaria la Araucaria'],
+  },
+];
+
+const _manifesto = {
+  eyebrow: '02',
+  lines: [
+    'Para nosotros, la excelencia está en la simpleza.',
+    'Veinte años construyendo con la misma convicción,',
+    'una industria a la vez.',
+  ],
+};
+
+const _contact = {
+  eyebrow: '03',
+  title: 'Contacto',
+  intro: 'Inversionistas, socios de marca y talento excepcional: conversemos.',
+  divisions: _divisions.map((d) => d.name),
+};
+
+const _cta = {
+  eyebrow: 'Para inversionistas y socios',
+  heading: 'El respaldo de veinte años, la ambición de los próximos veinte.',
+  ctaText: 'Conversemos',
+  ctaHref: '#contacto',
+};
+
+const _revealImages = [
+  '/images/lujo-silencioso/division-gastronomia.jpg',
+  '/images/lujo-silencioso/division-vestuario.jpg',
+  '/images/lujo-silencioso/division-agricola.jpg',
+  '/images/lujo-silencioso/division-tecnologica.jpg',
+  '/images/lujo-silencioso/division-inmobiliario.jpg',
+];
+---
+
+<Layout
+  title={_seo.title}
+  description={_seo.description}
+  image={_seo.ogImage}
+  googleFontsUrl={_seo.googleFontsUrl}
+  schemaData={_schema}
+>
+  <Hero
+    eyebrow={_hero.eyebrow}
+    headline={_hero.headline}
+    subheadline={_hero.subheadline}
+    ctaText={_hero.ctaText}
+    ctaHref={_hero.ctaHref}
+    images={_hero.images}
+  />
+
+  <IndustriesGallery eyebrow="01" label="Nuestras Divisiones" divisions={_divisions} />
+
+  <ManifestoSection eyebrow={_manifesto.eyebrow} lines={_manifesto.lines} />
+
+  <ContactReveal
+    contact={_contact}
+    cta={_cta}
+    images={_revealImages}
+  />
+
+  <VideoHero />
+</Layout>

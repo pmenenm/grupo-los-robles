@@ -1,0 +1,132 @@
+---
+// src/layouts/Layout.astro
+import BaseHead from '../components/BaseHead.astro';
+import Preloader from '../components/Preloader.astro';
+import Header from '../components/Header.astro';
+import SideNav from '../components/SideNav.astro';
+import Footer from '../components/Footer.astro';
+import StickyCTA from '../components/StickyCTA.astro';
+import { ClientRouter } from 'astro:transitions';
+
+const {
+  title,
+  description,
+  image,
+  googleFontsUrl,
+  schemaData,
+  locale = 'es',
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang={locale}>
+  <head>
+    <BaseHead
+      title={title}
+      description={description}
+      image={image}
+      googleFontsUrl={googleFontsUrl}
+    />
+
+    <!-- View Transitions: fade suave entre páginas (Astro 5) -->
+    <ClientRouter />
+
+    <!-- JSON-LD inyectado por el Agente SEO -->
+    {schemaData && (
+      <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+    )}
+  </head>
+
+  <body>
+    <Preloader />
+    <Header locale={locale} />
+    <SideNav locale={locale} />
+
+    <div id="smooth-wrapper">
+      <div id="smooth-content">
+        <main>
+          <slot />
+        </main>
+        <Footer locale={locale} />
+      </div>
+    </div>
+
+    <StickyCTA locale={locale} />
+
+
+    <!-- Motor de movimiento global — Lenis + GSAP -->
+    <script>
+      import Lenis from 'lenis';
+      import { gsap } from 'gsap';
+      import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+      // Registrar plugin una sola vez a nivel de módulo
+      gsap.registerPlugin(ScrollTrigger);
+      // La barra de URL móvil cambia el alto del viewport al hacer scroll y dispara
+      // refreshes que rompen pins/scrubs — regla dura del proyecto (CLAUDE.md §15.6.1 #3).
+      ScrollTrigger.config({ ignoreMobileResize: true });
+
+      // Expuesto en window para que Preloader.astro (y cualquier otro componente que
+      // necesite pausar el smooth-scroll, ej. un modal) pueda llamar lenis.stop()/start()
+      // sin duplicar una segunda instancia (prohibido, CLAUDE.md §19.3 #3).
+      declare global {
+        interface Window {
+          lenis?: InstanceType<typeof Lenis>;
+        }
+      }
+
+      let lenis: InstanceType<typeof Lenis> | undefined;
+      let rafCallback: ((time: number) => void) | undefined;
+
+      function init() {
+        lenis = new Lenis({
+          duration: 1.2,
+          easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          orientation: 'vertical',
+          smoothWheel: true,
+        });
+        window.lenis = lenis;
+
+        // Si el Preloader sigue activo en este momento (misma carga/navegación),
+        // pausar el scroll desde ya — no depende del orden de inicialización entre
+        // scripts: cada uno consulta el DOM en vez de asumir que el otro ya corrió.
+        if (document.querySelector('[data-preloader]:not([hidden])')) {
+          lenis.stop();
+        }
+
+        // Sincronizar ScrollTrigger con Lenis
+        lenis.on('scroll', ScrollTrigger.update);
+
+        rafCallback = (time: number) => {
+          lenis!.raf(time * 1000);
+        };
+        gsap.ticker.add(rafCallback);
+        gsap.ticker.lagSmoothing(0);
+
+        // Imágenes que cargan tarde pueden desplazar el alto del documento y desalinear
+        // los ScrollTrigger ya calculados (posiciones de entrada/pin quedan mal calibradas).
+        // Refrescar en cada carga de imagen corrige esa desincronización.
+        document.querySelectorAll('img').forEach((img) => {
+          if (!(img as HTMLImageElement).complete) {
+            img.addEventListener('load', () => ScrollTrigger.refresh(), { once: true });
+          }
+        });
+      }
+
+      // Antes del swap: destruir Lenis y matar todos los ScrollTriggers
+      // para evitar fugas de memoria y triggers duplicados
+      document.addEventListener('astro:before-swap', () => {
+        lenis?.destroy();
+        window.lenis = undefined;
+        if (rafCallback) {
+          gsap.ticker.remove(rafCallback);
+          rafCallback = undefined;
+        }
+        ScrollTrigger.killAll();
+      });
+
+      // Inicializar en cada carga de página (navegación inicial + View Transitions)
+      document.addEventListener('astro:page-load', init);
+    </script>
+  </body>
+</html>

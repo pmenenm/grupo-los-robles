@@ -1,0 +1,222 @@
+---
+// src/components/Hero.astro
+// Hero "vitrina" — el hero funciona como galería: 3 fotografías editoriales en crossfade
+// lento (referente: lingers.it, el hero ES la vitrina, no una sola imagen fija).
+// Momento oscuro (texto claro sobre imagen) — usa las variables *-inverse del tema.
+const {
+  eyebrow = 'Grupo Los Robles',
+  headline = 'Cinco industrias.<br/>Un mismo estándar<br/>de excelencia.',
+  subheadline = '',
+  ctaText = 'Descubra nuestro portafolio',
+  ctaHref = '#divisiones',
+  images = [],
+} = Astro.props;
+---
+
+<section id="inicio" class="hero" data-gsap-section="hero" aria-label="Grupo Los Robles">
+  <div class="hero__vista" data-hero-vista aria-hidden="true">
+    {images.map((img, i) => (
+      <img
+        class="hero__slide"
+        class:list={[{ 'is-active': i === 0 }]}
+        src={img.src}
+        alt={img.alt ?? ''}
+        loading={i === 0 ? 'eager' : 'lazy'}
+        data-hero-slide
+      />
+    ))}
+    <div class="hero__scrim" aria-hidden="true"></div>
+  </div>
+
+  <div class="container hero__inner">
+    <p class="hero__eyebrow" data-hero-fade>{eyebrow}</p>
+    <h1 class="hero__headline" data-hero-fade set:html={headline} />
+    {subheadline && <p class="hero__sub" data-hero-fade>{subheadline}</p>}
+    <a href={ctaHref} class="hero__cta" data-hero-fade>{ctaText}</a>
+  </div>
+
+  <div class="hero__scrollcue" aria-hidden="true">
+    <span></span>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+
+  let rotateTimer;
+
+  function initHeroVista() {
+    const slides = document.querySelectorAll('[data-hero-slide]');
+    if (slides.length < 2) return;
+    clearInterval(rotateTimer);
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+
+    let current = 0;
+    rotateTimer = setInterval(() => {
+      const next = (current + 1) % slides.length;
+      slides[current].classList.remove('is-active');
+      slides[next].classList.add('is-active');
+      current = next;
+    }, 6500);
+
+    document.addEventListener('astro:before-swap', () => clearInterval(rotateTimer), { once: true });
+  }
+
+  function initHeroEntrance() {
+    const section = document.querySelector('[data-gsap-section="hero"]');
+    const items = document.querySelectorAll('[data-hero-fade]');
+    if (!section || !items.length) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    gsap.from(items, {
+      y: 24,
+      opacity: 0,
+      duration: 1,
+      ease: 'expo.out',
+      stagger: 0.12,
+      delay: 0.2,
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    initHeroVista();
+    initHeroEntrance();
+  });
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    color-scheme: dark;
+  }
+
+  .hero__vista {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-color: var(--bg-primary-inverse);
+  }
+
+  .hero__slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transform: scale(1.06);
+    transition: opacity 1.6s ease, transform 9s linear;
+  }
+  .hero__slide.is-active {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .hero__scrim {
+    position: absolute;
+    inset: 0;
+    /* Reforzado: el texto vive en la mitad inferior y debe leerse bien sobre
+       cualquiera de las 3 fotos del carrusel, sin importar cuán clara sea. */
+    background:
+      linear-gradient(0deg,
+        color-mix(in srgb, var(--bg-primary-inverse) 92%, transparent) 0%,
+        color-mix(in srgb, var(--bg-primary-inverse) 55%, transparent) 45%,
+        transparent 78%),
+      linear-gradient(180deg, color-mix(in srgb, var(--bg-primary-inverse) 35%, transparent) 0%, transparent 35%);
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: 1;
+    padding-block: var(--space-lg);
+  }
+
+  .hero__eyebrow {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-primary-inverse);
+    margin-bottom: var(--space-sm);
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .hero__headline {
+    font-family: var(--font-heading);
+    font-size: var(--text-display);
+    font-weight: 500;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    color: var(--text-primary-inverse);
+    text-wrap: balance;
+    max-width: 18ch;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  .hero__sub {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: var(--text-lg);
+    line-height: 1.6;
+    color: var(--text-primary-inverse);
+    max-width: 48ch;
+    margin-top: var(--space-md);
+    text-shadow: 0 1px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .hero__cta {
+    display: inline-block;
+    margin-top: var(--space-lg);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-primary-inverse);
+    text-decoration: none;
+    border: 1px solid color-mix(in srgb, var(--text-primary-inverse) 70%, transparent);
+    padding: var(--space-sm) var(--space-lg);
+    transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  }
+  .hero__cta:hover {
+    background-color: var(--text-primary-inverse);
+    color: var(--bg-primary-inverse);
+    border-color: var(--text-primary-inverse);
+  }
+
+  .hero__scrollcue {
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-md);
+    z-index: 1;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 48px;
+    background-color: color-mix(in srgb, var(--text-primary-inverse) 30%, transparent);
+    overflow: hidden;
+  }
+  .hero__scrollcue span {
+    display: block;
+    width: 100%;
+    height: 40%;
+    background-color: var(--text-primary-inverse);
+    animation: hero-scrollcue 2.2s ease-in-out infinite;
+  }
+  @keyframes hero-scrollcue {
+    0%   { transform: translateY(-100%); }
+    100% { transform: translateY(250%); }
+  }
+
+  @media (max-width: 640px) {
+    .hero__scrollcue { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__slide { transition: opacity 0.3s linear; transform: none; }
+  }
+</style>

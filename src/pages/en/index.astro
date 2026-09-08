@@ -1,0 +1,192 @@
+---
+// src/pages/en/index.astro — Grupo Los Robles (English)
+// Mirror of src/pages/index.astro — same structure/data, English copy. Keep both in sync.
+import Layout from '../../layouts/Layout.astro';
+import Hero from '../../components/Hero.astro';
+import IndustriesGallery from '../../components/IndustriesGallery.astro';
+import ManifestoSection from '../../components/ManifestoSection.astro';
+import ContactReveal from '../../components/ContactReveal.astro';
+import VideoHero from '../../components/VideoHero.astro';
+import site from '../../../contracts/site.en.json';
+
+const _seo = {
+  title: `${site.site.siteName} · ${site.site.tagline}`,
+  description: site.organizationSchema.description,
+  ogImage: site.site.defaultOgImage,
+  googleFontsUrl:
+    'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap',
+};
+
+const _schema = site.organizationSchema;
+
+const _hero = {
+  eyebrow: 'Grupo Los Robles, over 20 years of trajectory',
+  headline: 'Five industries.<br/>One standard<br/>of excellence.',
+  subheadline:
+    'A Chilean holding that invests in, operates and grows leading brands in gastronomy, fashion, agribusiness, technology and real estate.',
+  ctaText: 'Discover our portfolio',
+  ctaHref: '#divisiones',
+  images: [
+    { src: '/images/lujo-silencioso/hero-interior.jpg', alt: 'Minimalist architectural interior' },
+    { src: '/images/lujo-silencioso/hero-agricola.jpg', alt: 'Farmland at dusk' },
+    { src: '/images/lujo-silencioso/hero-vestuario.jpg', alt: 'Minimalist fashion boutique' },
+  ],
+};
+
+const _divisions = [
+  {
+    id: 'gastronomia',
+    number: '01',
+    name: 'Gastronomy',
+    description:
+      'Through Mil Sabores, we operate gastronomic concepts with their own identity, each with a consistent standard of quality and service.',
+    image: '/images/lujo-silencioso/division-gastronomia.jpg',
+    alt: 'Fine dining plate served in minimalist style',
+    featured: true,
+    brands: [
+      { name: 'Osaka', logo: '/images/logos/osaka.png' },
+      { name: 'La Mar', logo: '/images/logos/la-mar.png' },
+      { name: 'Panchita', logo: '/images/logos/panchita.png' },
+      { name: 'Tanta', logo: '/images/logos/tanta.png' },
+      { name: 'Muu Steak', logo: '/images/logos/muu-steak.png' },
+      { name: 'Badass', logo: '/images/logos/badass.png' },
+      { name: 'El Japonés', logo: '/images/logos/el-japones.png' },
+      { name: 'Mamma Mia', logo: '/images/logos/mamma-mia.png' },
+      { name: 'Mesón del Marinero', logo: '/images/logos/meson-del-marinero.png' },
+      { name: 'Kairos Garden', logo: '/images/logos/kairos-garden.png' },
+      { name: 'La Piazza', logo: '/images/logos/la-piazza.png' },
+      { name: 'Take a Wok', logo: '/images/logos/take-a-wok.png' },
+      { name: 'Fuente Suiza', logo: '/images/logos/fuente-suiza.png' },
+      { name: 'Pizzería La Argentina', logo: '/images/logos/la-argentina.png' },
+      { name: 'Sky Bar & Coffee 300', logo: '/images/logos/sky-300.png' },
+      { name: 'Siete Cortes', logo: '/images/logos/siete-cortes.png' },
+      { name: 'La Sanguchera', logo: '/images/logos/la-sanguchera.png' },
+      { name: 'Dulce Luna', logo: '/images/logos/dulce-luna.png' },
+      { name: 'Lady Focaccia', logo: '/images/logos/lady-focaccia.png' },
+      { name: 'Udon', logo: '/images/logos/udon.png' },
+      { name: 'Milá', logo: '/images/logos/mila.png' },
+      { name: 'El Bodegón', logo: '/images/logos/el-bodegon.png' },
+      { name: 'Jalisco', logo: '/images/logos/jalisco.png' },
+      { name: 'Barra Chalaca', logo: '/images/logos/barra-chalaca.png' },
+      { name: 'Frida Kahlo', logo: '/images/logos/frida-kahlo.png' },
+      { name: 'Havanna', logo: '/images/logos/havanna.png' },
+      { name: 'Enrique Tomás', logo: '/images/logos/enrique-tomas.png' },
+      { name: 'Mooi', logo: '/images/logos/mooi.png' },
+      { name: 'Muu Grill', logo: '/images/logos/muu-grill.png' },
+    ],
+  },
+  {
+    id: 'vestuario',
+    number: '02',
+    name: 'Apparel Retail',
+    description:
+      'We represent and operate global apparel and accessories brands in Chile, with a presence in the country’s leading shopping centers.',
+    image: '/images/lujo-silencioso/division-vestuario.jpg',
+    alt: 'Detail of a minimalist fashion boutique',
+    featured: true,
+    brands: [
+      { name: 'BOSS', locations: ['Costanera Center', 'Parque Arauco', 'Plaza Antofagasta'] },
+      { name: 'HUGO', locations: ['Parque Arauco', 'Costanera Center'] },
+      { name: 'GEOX', locations: ['Parque Arauco'] },
+    ],
+    ctaLabel: 'Visit hugoboss.cl',
+    ctaHref: 'https://www.hugoboss.cl',
+  },
+  {
+    id: 'agricola',
+    number: '03',
+    name: 'Agriculture',
+    description:
+      'With over 30 years of trajectory, Valbifrut is the second-largest walnut exporter in Chile. Leadership built with a long-term vision of the land.',
+    image: '/images/lujo-silencioso/division-agricola.jpg',
+    alt: 'Walnuts on a wooden surface, warm light',
+    ctaLabel: 'Visit valbifrut.cl',
+    ctaHref: 'https://valbifrut.cl',
+  },
+  {
+    id: 'tecnologia',
+    number: '04',
+    name: 'Technology Solutions',
+    description:
+      'Dot Solutions develops business intelligence, sales management and loyalty platforms for companies operating at scale.',
+    image: '/images/lujo-silencioso/division-tecnologica.jpg',
+    alt: 'Minimalist desk with a closed laptop',
+    ctaLabel: 'Visit dotsolutions.io',
+    ctaHref: 'https://dotsolutions.io',
+  },
+  {
+    id: 'inmobiliaria',
+    number: '05',
+    name: 'Real Estate',
+    description:
+      'We manage and develop commercial and office projects, prioritizing locations with excellent connectivity and flow.',
+    image: '/images/lujo-silencioso/division-inmobiliario.jpg',
+    alt: 'Modern architectural facade at dusk',
+    projects: ['Los Robles Investments', 'Inmobiliaria Los Nogales', 'Inmobiliaria la Araucaria'],
+  },
+];
+
+const _manifesto = {
+  eyebrow: '02',
+  lines: [
+    'For us, excellence lies in simplicity.',
+    'Twenty years building with the same conviction,',
+    'one industry at a time.',
+  ],
+};
+
+const _contact = {
+  eyebrow: '03',
+  intro: "Investors, brand partners and exceptional talent: let's talk.",
+  divisions: _divisions.map((d) => d.name),
+};
+
+const _cta = {
+  eyebrow: 'For investors & partners',
+  heading: 'Twenty years of trust, the ambition for twenty more.',
+  ctaText: "Let's talk",
+  ctaHref: '#contacto',
+};
+
+const _revealImages = [
+  '/images/lujo-silencioso/division-gastronomia.jpg',
+  '/images/lujo-silencioso/division-vestuario.jpg',
+  '/images/lujo-silencioso/division-agricola.jpg',
+  '/images/lujo-silencioso/division-tecnologica.jpg',
+  '/images/lujo-silencioso/division-inmobiliario.jpg',
+];
+---
+
+<Layout
+  title={_seo.title}
+  description={_seo.description}
+  image={_seo.ogImage}
+  googleFontsUrl={_seo.googleFontsUrl}
+  schemaData={_schema}
+  locale="en"
+>
+  <Hero
+    eyebrow={_hero.eyebrow}
+    headline={_hero.headline}
+    subheadline={_hero.subheadline}
+    ctaText={_hero.ctaText}
+    ctaHref={_hero.ctaHref}
+    images={_hero.images}
+  />
+
+  <IndustriesGallery eyebrow="01" label="Our Divisions" divisions={_divisions} />
+
+  <ManifestoSection eyebrow={_manifesto.eyebrow} lines={_manifesto.lines} />
+
+  <ContactReveal
+    contact={_contact}
+    cta={_cta}
+    images={_revealImages}
+    locale="en"
+  />
+
+  <VideoHero
+    text="Leaders in the culinary industry, our main goal is to always deliver a unique experience, with the finest quality and unmatched service."
+    ctaText="discover mil sabores"
+  />
+</Layout>
