@@ -38,30 +38,52 @@ const openLabel = locale === 'en' ? 'Open menu' : 'Abrir menú';
 </header>
 
 <script>
-  const header = document.querySelector('[data-header]');
-  const toggle = document.querySelector('[data-nav-toggle]');
+  // Envuelto en astro:page-load (en vez de correr una sola vez a nivel de módulo): con
+  // ClientRouter, este script no se re-ejecuta tras una transición (mismo contenido ya
+  // corrido), así que sin esto los listeners quedaban atados al <header> de la página
+  // anterior (nodo ya desmontado) y el header nuevo nunca recibía `.is-scrolled` — se
+  // quedaba invisible tras cambiar de idioma.
+  let cleanupHeader: (() => void) | undefined;
 
-  // Header se vuelve sólido al hacer scroll
-  if (header) {
-    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 40);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
+  function initHeader() {
+    const header = document.querySelector<HTMLElement>('[data-header]');
+    const toggle = document.querySelector<HTMLElement>('[data-nav-toggle]');
+    const cleanups: Array<() => void> = [];
+
+    // Header se vuelve sólido al hacer scroll
+    if (header) {
+      const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 40);
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
+      cleanups.push(() => window.removeEventListener('scroll', onScroll));
+    }
+
+    // El estado (abierto/cerrado) lo dueño lo tiene SideNav.astro; Header solo despacha el toggle
+    if (toggle) {
+      const onToggleClick = () => {
+        const open = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!open));
+        toggle.classList.toggle('is-active', !open);
+        document.dispatchEvent(new CustomEvent('sidenav:toggle'));
+      };
+      const onSidenavClosed = () => {
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.classList.remove('is-active');
+      };
+
+      toggle.addEventListener('click', onToggleClick);
+      document.addEventListener('sidenav:closed', onSidenavClosed);
+      cleanups.push(() => {
+        toggle.removeEventListener('click', onToggleClick);
+        document.removeEventListener('sidenav:closed', onSidenavClosed);
+      });
+    }
+
+    cleanupHeader = () => cleanups.forEach((fn) => fn());
   }
 
-  // El estado (abierto/cerrado) lo dueño lo tiene SideNav.astro; Header solo despacha el toggle
-  if (toggle) {
-    toggle.addEventListener('click', () => {
-      const open = toggle.getAttribute('aria-expanded') === 'true';
-      toggle.setAttribute('aria-expanded', String(!open));
-      toggle.classList.toggle('is-active', !open);
-      document.dispatchEvent(new CustomEvent('sidenav:toggle'));
-    });
-
-    document.addEventListener('sidenav:closed', () => {
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.classList.remove('is-active');
-    });
-  }
+  document.addEventListener('astro:page-load', initHeader);
+  document.addEventListener('astro:before-swap', () => cleanupHeader?.());
 </script>
 
 <style>

@@ -19,9 +19,16 @@ const label = locale === 'en' ? "Let's talk" : 'Hablemos';
 </a>
 
 <script>
-  const cta = document.querySelector('[data-sticky-cta]');
-  if (cta) {
+  // Igual que Header.astro: con ClientRouter este script no se re-ejecuta tras una
+  // transición, así que sin envolver en astro:page-load el listener quedaba atado al
+  // CTA de la página anterior (nodo desmontado) y el nuevo nunca se mostraba/ocultaba.
+  let cleanupStickyCta: (() => void) | undefined;
+
+  function initStickyCta() {
+    const cta = document.querySelector<HTMLElement>('[data-sticky-cta]');
+    if (!cta) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cleanups: Array<() => void> = [];
 
     const update = () => {
       const y = window.scrollY;
@@ -32,6 +39,10 @@ const label = locale === 'en' ? "Let's talk" : 'Hablemos';
     update();
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update, { passive: true });
+    cleanups.push(() => {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    });
 
     // Micro-pulso cada 8s para atraer el ojo
     if (!reduced) {
@@ -41,9 +52,14 @@ const label = locale === 'en' ? "Let's talk" : 'Hablemos';
         setTimeout(() => cta.classList.remove('is-pulsing'), 700);
       };
       const interval = setInterval(pulse, 8000);
-      document.addEventListener('astro:before-swap', () => clearInterval(interval), { once: true });
+      cleanups.push(() => clearInterval(interval));
     }
+
+    cleanupStickyCta = () => cleanups.forEach((fn) => fn());
   }
+
+  document.addEventListener('astro:page-load', initStickyCta);
+  document.addEventListener('astro:before-swap', () => cleanupStickyCta?.());
 </script>
 
 <style>

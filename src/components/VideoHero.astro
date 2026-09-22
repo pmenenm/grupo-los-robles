@@ -55,6 +55,12 @@ const {
     if (!panel) return;
 
     if (video) {
+      // ClientRouter re-inserta este <video> en el documento al navegar (ej. cambio de
+      // idioma) sin disparar el algoritmo de carga de medios del navegador — el video
+      // queda con networkState "sin fuente" y solo se ve el poster. Forzar load()
+      // en cada astro:page-load lo repara sin afectar la carga inicial de la página.
+      video.load();
+
       // Pausar el video fuera de viewport (mismo criterio que ShaderField.astro para
       // no gastar batería/CPU con motion invisible).
       const io = new IntersectionObserver(([entry]) => {

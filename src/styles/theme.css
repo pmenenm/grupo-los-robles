@@ -83,9 +83,10 @@ html {
   /* No es un heading: es un párrafo editorial largo (la frase del Manifiesto), un rol
      distinto a H2/H3 aunque hoy coincida en valor con --text-h3 — token separado a
      propósito para no acoplar accidentalmente su tamaño al de los H3 si alguno cambia.
-     44px fue el máximo verificado sin partir palabras a la mitad en 375px (60px sí
-     partía "construyendo" en dos líneas — bug real detectado en verificación). */
-  --text-quote:   44px;
+     57px = 44px +30%, pedido explícito del Ingeniero Líder para dar más intención a esta
+     sección (excepción puntual de esta sección, ManifestoSection.astro ahora rompe el
+     texto en 5 líneas fijas con <br> en vez de dejar que el navegador las auto-envuelva). */
+  --text-quote:   57px;
 
   /* Espaciado modular */
   --space-xs:  0.5rem;

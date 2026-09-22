@@ -20,7 +20,12 @@ const {
   <div class="container manifesto__inner">
     <span class="manifesto__eyebrow">{eyebrow}</span>
     <p class="manifesto__text" data-manifesto-text>
-      {lines.join(' ')}
+      {lines.map((line, i) => (
+        <>
+          {line}
+          {i < lines.length - 1 && <br />}
+        </>
+      ))}
     </p>
   </div>
 </section>
@@ -169,5 +174,17 @@ const {
     letter-spacing: -0.02em;
     color: var(--text-primary);
     text-wrap: balance;
+  }
+
+  @media (max-width: 640px) {
+    /* --text-quote (57px) es a propósito para dar más impacto en tablet/desktop, pero a
+       ese tamaño "construyendo" ya no cabe como palabra única en 375px de ancho — el
+       reveal por caracteres (SplitText, ver <script> abajo) envuelve cada letra en su
+       propio inline-block, así que el navegador puede partir la palabra a la mitad en
+       vez de bajarla entera de línea (mismo bug ya detectado antes a 60px, ver
+       theme.css). 44px es el tamaño verificado sin ese problema. */
+    .manifesto__text {
+      font-size: 44px;
+    }
   }
 </style>
