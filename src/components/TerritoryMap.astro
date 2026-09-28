@@ -1,0 +1,883 @@
+---
+// src/components/TerritoryMap.astro
+// Sub-bloque de ManifestoSection.astro: mapa real (MapLibre GL JS + tiles vectoriales
+// de OpenFreeMap, sin API key, sin cuenta, sin limite de uso) con las ubicaciones reales
+// donde opera Grupo Los Robles hoy.
+// Pivote de decision explicita del Ingeniero: SVG a medida -> Mapbox GL JS (descartado,
+// requiere token/cuenta de pago) -> Leaflet + CartoDB Dark Matter (descartado en la
+// practica: CARTO empezo a exigir API key en sus tiles raster desde fines de agosto de
+// 2026, dejo de ser realmente "sin cuenta") -> MapLibre GL JS + OpenFreeMap (definitivo).
+// A diferencia de tiles raster (CartoDB/Mapbox), OpenFreeMap sirve tiles VECTORIALES: el
+// estilo (colores de tierra/agua/calles/fronteras) se repinta en runtime leyendo los
+// tokens del tema (--bg-primary-inverse, --accent-warm, etc. -- ver buildDarkStyle() en
+// el script), asi que el mapa SI respeta "solo variables del tema" (CLAUDE.md 7.1), algo
+// que ningun proveedor de tiles raster puede ofrecer.
+// El pin de Santiago hace fitBounds (animado) a un SEGUNDO conjunto de marcadores: el
+// Sector Oriente del Gran Santiago, con la gastronomia de lujo del grupo.
+// Coordenadas verificadas contra OpenStreetMap/Nominatim (nominatim.openstreetmap.org)
+// el 2026-09-27, no aproximadas a mano:
+//  - Vestuario (grupolosrobles.com/vestuario/): BOSS en Mall Plaza Antofagasta,
+//    Costanera Center / Altos Las Condes / outlet Buenaventura (Quilicura) en Santiago.
+//  - Inmobiliaria (grupolosrobles.com/inmobiliaria/): Los Robles Investments en Av. El
+//    Bosque, Las Condes (Santiago); Inmobiliaria Los Nogales en el Centro Industrial El
+//    Belloto, Quilpue; Inmobiliaria La Araucaria en Zapallar (proyecto junto al
+//    restaurante Donde Gaston).
+//  - Agricola (valbifrut.cl): planta y oficinas en Buin, Region Metropolitana.
+//  - Tecnologica (dotsolutions.io): Av. del Valle Norte 928, of. 503, Huechuraba,
+//    Santiago.
+//  - Gastronomia (grupomilsabores.cl, paginas de marca): Osaka, La Mar y Panchita
+//    comparten Av. Nueva Costanera 4076 (Vitacura); Tanta tiene locales en Parque
+//    Arauco, Alto Las Condes, Costanera Center y Plaza Egaña, ademas de Vina del Mar.
+//    NOTA: "Madam Tusan" NO aparece en el listado oficial de marcas de
+//    grupomilsabores.cl (verificado, 404 en /marca-madam-tusan/ y /marca-madamtusan/)
+//    -- deliberadamente omitido, no se inventan marcas.
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+const { locale = 'es' } = Astro.props;
+
+const PINS = [
+  {
+    id: 'antofagasta',
+    lat: -23.6469,
+    lng: -70.4031,
+    image: '/images/lujo-silencioso/division-vestuario.jpg',
+    es: { city: 'Antofagasta', text: 'Vestuario: BOSS en Mall Plaza Antofagasta.' },
+    en: { city: 'Antofagasta', text: 'Apparel: BOSS at Mall Plaza Antofagasta.' },
+  },
+  {
+    id: 'valparaiso',
+    lat: -33.0088,
+    lng: -71.5473,
+    image: '/images/lujo-silencioso/division-inmobiliario.jpg',
+    es: { city: 'Valparaíso', text: 'Inmobiliaria en Quilpué y Zapallar. Vestuario con BOSS en Mall Marina y gastronomía con Tanta, ambos en Viña del Mar.' },
+    en: { city: 'Valparaiso', text: 'Real estate in Quilpue and Zapallar. Apparel with BOSS at Mall Marina and Tanta restaurant, both in Vina del Mar.' },
+  },
+  {
+    id: 'concepcion',
+    lat: -36.7918,
+    lng: -73.0668,
+    image: '/images/lujo-silencioso/division-vestuario.jpg',
+    es: { city: 'Concepción', text: 'Vestuario: BOSS en Mallplaza El Trébol, Talcahuano.' },
+    en: { city: 'Concepcion', text: 'Apparel: BOSS at Mallplaza El Trebol, Talcahuano.' },
+  },
+  {
+    id: 'santiago',
+    lat: -33.4374,
+    lng: -70.6513,
+    zoomable: true,
+    image: '/images/lujo-silencioso/division-tecnologica.jpg',
+    es: { city: 'Santiago', text: 'El corazón operativo del grupo: tecnología, vestuario, inmobiliaria, agrícola y gastronomía.' },
+    en: { city: 'Santiago', text: 'The group\'s operational heart: technology, apparel, real estate, agriculture and gastronomy.' },
+  },
+];
+
+// Sector oriente de Santiago -- coordenadas geocodificadas via Nominatim/OSM sobre la
+// direccion real de cada local (no una aproximacion libre).
+const SANTIAGO_PINS = [
+  {
+    id: 'nueva-costanera',
+    lat: -33.3956,
+    lng: -70.5977,
+    image: '/images/gastronomia/osaka.webp',
+    es: { city: 'Vitacura, Av. Nueva Costanera', polo: 'Polo Nueva Costanera', text: 'Osaka, La Mar y Panchita: los conceptos insignia de Mil Sabores, sobre la misma calle.' },
+    en: { city: 'Vitacura, Av. Nueva Costanera', polo: 'Nueva Costanera District', text: "Osaka, La Mar and Panchita: Mil Sabores' flagship concepts, all on the same street." },
+  },
+  {
+    id: 'parque-arauco',
+    lat: -33.4023,
+    lng: -70.5773,
+    image: '/images/gastronomia/tanta.webp',
+    es: { city: 'Parque Arauco, Las Condes', polo: 'Polo Parque Arauco', text: 'Tanta, en uno de los centros comerciales más exclusivos de Santiago.' },
+    en: { city: 'Parque Arauco, Las Condes', polo: 'Parque Arauco District', text: "Tanta, at one of Santiago's most exclusive malls." },
+  },
+  {
+    id: 'alto-las-condes',
+    lat: -33.3902,
+    lng: -70.5456,
+    image: '/images/gastronomia/barra-chalaca.webp',
+    es: { city: 'Alto Las Condes', polo: 'Polo Alto Las Condes', text: 'Tanta y Barra Chalaca, en la puerta de entrada a la precordillera de Las Condes.' },
+    en: { city: 'Alto Las Condes', polo: 'Alto Las Condes District', text: 'Tanta and Barra Chalaca, at the gateway to the Las Condes foothills.' },
+  },
+  {
+    id: 'costanera-center',
+    lat: -33.4180,
+    lng: -70.6068,
+    image: '/images/gastronomia/tanta.webp',
+    es: { city: 'Costanera Center, Providencia', polo: 'Polo Costanera Center', text: 'Tanta y Barra Chalaca, junto a la torre más alta de Sudamérica.' },
+    en: { city: 'Costanera Center, Providencia', polo: 'Costanera Center District', text: "Tanta and Barra Chalaca, next to South America's tallest tower." },
+  },
+  {
+    id: 'los-dominicos',
+    lat: -33.4083,
+    lng: -70.5485,
+    image: '/images/gastronomia/barra-chalaca.webp',
+    es: { city: 'Los Dominicos, Las Condes', polo: 'Polo Los Dominicos', text: 'Barra Chalaca, junto al tradicional pueblito artesanal.' },
+    en: { city: 'Los Dominicos, Las Condes', polo: 'Los Dominicos District', text: 'Barra Chalaca, next to the traditional artisan village.' },
+  },
+  {
+    id: 'plaza-egana',
+    lat: -33.4527,
+    lng: -70.5698,
+    image: '/images/gastronomia/tanta.webp',
+    es: { city: 'Plaza Egaña, La Reina', polo: 'Polo Oriente Sur', text: 'Tanta extiende su presencia hacia el oriente de la capital.' },
+    en: { city: 'Plaza Egaña, La Reina', polo: 'Southeast District', text: "Tanta extends its reach further east across the capital." },
+  },
+];
+
+const label = locale === 'en' ? 'Our territory' : 'Nuestro territorio';
+const hint = locale === 'en' ? 'Hover or tap a point' : 'Pasa el cursor o toca un punto';
+const backLabel = locale === 'en' ? 'Back to map' : 'Volver al mapa';
+---
+
+<div class="territory" data-territory>
+  <div class="territory__header">
+    <p class="territory__label" data-territory-label>{label}</p>
+    <button type="button" class="territory__back" data-territory-back hidden>
+      {backLabel}
+    </button>
+  </div>
+
+  <div class="territory__grid">
+    <div class="territory__map-wrap">
+      <div
+        class="territory__map"
+        data-territory-map
+        role="img"
+        aria-label={locale === 'en' ? 'Map of Chile with Grupo Los Robles locations' : 'Mapa de Chile con las ubicaciones de Grupo Los Robles'}
+      >
+      </div>
+    </div>
+
+    <div class="territory__panel" data-territory-panel>
+      <div class="territory__panel-media">
+        <img class="territory__panel-img" data-territory-img src={PINS[0].image} alt="" loading="lazy" />
+      </div>
+      <p class="territory__panel-city" data-territory-city>{PINS[0][locale].city}</p>
+      <p class="territory__panel-text" data-territory-text>{PINS[0][locale].text}</p>
+      <p class="territory__hint" data-territory-hint>{hint}</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import * as maplibregl from 'maplibre-gl';
+  import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+  gsap.registerPlugin(ScrollTrigger);
+
+  // MapLibre 6 (ESM-only) localiza su worker via "new URL(..., import.meta.url)" en
+  // tiempo de ejecucion -- Vite reescribe ese import.meta.url al chunk hasheado y el
+  // worker termina apuntando a una ruta que no existe ("Worker failed to load"), asi
+  // que no se decodifican los tiles vectoriales aunque no tire un error visible. Fix
+  // documentado para bundlers (Vite/webpack/esbuild): importar el worker con
+  // "?worker&url" (asi arrastra su sibling maplibre-gl-shared.mjs a un chunk propio) y
+  // fijarlo explicitamente antes de crear cualquier Map.
+  maplibregl.setWorkerUrl(maplibreWorkerUrl);
+
+  // Datos reales embebidos server-side via un JSON script -- el <script> principal es
+  // un modulo compartido (no recibe props de Astro), asi que la data pasa como texto.
+  let cleanupTerritory: (() => void) | undefined;
+
+  function hexToRgba(hex: string, alpha: number) {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  // Repinta el estilo publico de OpenFreeMap ("liberty") con los tokens del tema en vez
+  // de su paleta original -- se mantiene TODA la geometria/fuentes/schema (tileset real,
+  // OpenMapTiles), solo se reemplazan los "paint" de cada capa. Se quitan las capas de
+  // texto (symbol, "sin etiquetas" pedido explicito), el hillshade raster (no calza con
+  // un tema oscuro) y los edificios 3D (no buscamos un mapa literal, sino la misma
+  // cualidad "quiet luxury" del SVG anterior, ahora sobre geografia real).
+  async function buildDarkStyle() {
+    const res = await fetch('https://tiles.openfreemap.org/styles/liberty');
+    const style = await res.json();
+    const root = getComputedStyle(document.documentElement);
+    const bg = root.getPropertyValue('--bg-primary-inverse').trim();
+    const water = root.getPropertyValue('--bg-secondary-inverse').trim();
+    const building = root.getPropertyValue('--border-inverse').trim();
+    const road = hexToRgba(root.getPropertyValue('--text-secondary-inverse').trim(), 0.4);
+    const boundary = hexToRgba(root.getPropertyValue('--accent-warm').trim(), 0.55);
+
+    style.layers = style.layers
+      .filter((l: any) => l.type !== 'symbol' && l.type !== 'raster' && l.type !== 'fill-extrusion')
+      .map((l: any) => {
+        if (l.type === 'background') return { ...l, paint: { 'background-color': bg } };
+        if (l['source-layer'] === 'water' || l['source-layer'] === 'waterway') {
+          return { ...l, paint: l.type === 'fill' ? { 'fill-color': water } : { 'line-color': water, 'line-width': 1 } };
+        }
+        if (l['source-layer'] === 'building') {
+          return { ...l, paint: { 'fill-color': building, 'fill-opacity': 0.6 } };
+        }
+        if (l['source-layer'] === 'boundary') {
+          return { ...l, paint: { 'line-color': boundary, 'line-width': l.id === 'boundary_2' ? 1 : 0.6 } };
+        }
+        if (l['source-layer'] === 'transportation' || l['source-layer'] === 'aeroway') {
+          if (l.type !== 'line' || String(l.id).includes('casing')) {
+            return { ...l, layout: { ...(l.layout ?? {}), visibility: 'none' } };
+          }
+          return { ...l, paint: { 'line-color': road, 'line-width': 0.6 } };
+        }
+        // landcover, landuse, park: mismo tono que el fondo -- la unica textura visible
+        // es agua, calles, edificios y fronteras (igual que el SVG anterior).
+        if (l.type === 'fill') return { ...l, paint: { 'fill-color': bg } };
+        if (l.type === 'line') return { ...l, layout: { ...(l.layout ?? {}), visibility: 'none' } };
+        return l;
+      });
+    return style;
+  }
+
+  async function initTerritory() {
+    const root = document.querySelector<HTMLElement>('[data-territory]');
+    const mapEl = document.querySelector<HTMLElement>('[data-territory-map]');
+    const backBtn = document.querySelector<HTMLButtonElement>('[data-territory-back]');
+    const labelEl = document.querySelector<HTMLElement>('[data-territory-label]');
+    const hintEl = document.querySelector<HTMLElement>('[data-territory-hint]');
+    const panel = document.querySelector<HTMLElement>('[data-territory-panel]');
+    const panelImg = document.querySelector<HTMLImageElement>('[data-territory-img]');
+    const panelCity = document.querySelector<HTMLElement>('[data-territory-city]');
+    const panelText = document.querySelector<HTMLElement>('[data-territory-text]');
+    const dataEl = document.querySelector<HTMLScriptElement>('[data-territory-data]');
+    if (!root || !mapEl || !backBtn || !panel || !panelImg || !panelCity || !panelText || !dataEl) return;
+
+    const { pins, santiagoPins } = JSON.parse(dataEl.textContent || '{}');
+
+    const cleanups: Array<() => void> = [];
+    let swapTimer: ReturnType<typeof setTimeout> | undefined;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    type PinEntry = { el: HTMLElement; marker: maplibregl.Marker; city: string; text: string; image: string; polo?: string; zoomable?: boolean; lng: number; lat: number };
+
+    function setActive(entry: PinEntry, all: PinEntry[]) {
+      all.forEach((e) => e.el.classList.toggle('is-active', e === entry));
+      if (panelImg!.src.endsWith(entry.image) && panelCity!.textContent === entry.city) return;
+      panel!.classList.add('is-swapping');
+      clearTimeout(swapTimer);
+      swapTimer = setTimeout(() => {
+        panelImg!.src = entry.image;
+        panelImg!.alt = entry.city;
+        panelCity!.textContent = entry.city;
+        panelText!.textContent = entry.text;
+        panel!.classList.remove('is-swapping');
+      }, 320);
+    }
+
+    function computeBounds(points: Array<{ lat: number; lng: number }>): [[number, number], [number, number]] {
+      const lats = points.map((p) => p.lat);
+      const lngs = points.map((p) => p.lng);
+      return [
+        [Math.min(...lngs), Math.min(...lats)],
+        [Math.max(...lngs), Math.max(...lats)],
+      ];
+    }
+
+    const countryBounds = computeBounds(pins);
+    const sectorBounds = computeBounds(santiagoPins);
+
+    // fitBounds() de MapLibre confia en getBounds() (los 4 vertices de la ventana
+    // reproyectados) para decidir el zoom -- con una geometria tan alargada como Chile
+    // (13+ grados de latitud contra ~2.6 de longitud) ese calculo puede quedar
+    // ligeramente corto: bug real detectado, Concepcion y Santiago se proyectaban
+    // fuera del canvas visible (mas alla del borde inferior) aun cuando getBounds()
+    // decia que "deberian" entrar. Verificacion de piso: proyectar cada punto real con
+    // map.project() y, si alguno cae fuera del margen seguro, alejar el zoom hasta que
+    // todos entren -- corrige el limite de fitBounds sin depender de su calculo interno.
+    function ensureAllVisible(points: Array<{ lat: number; lng: number }>, margin = 24) {
+      // canvas.width/height son pixeles de DISPOSITIVO (escalados por devicePixelRatio),
+      // mientras que map.project() devuelve pixeles CSS -- comparar contra
+      // getBoundingClientRect() evita subestimar el margen real en pantallas retina.
+      const rect = mapEl.getBoundingClientRect();
+      for (let i = 0; i < 20; i++) {
+        const allIn = points.every((p) => {
+          const pt = map.project([p.lng, p.lat]);
+          return pt.x >= margin && pt.x <= rect.width - margin && pt.y >= margin && pt.y <= rect.height - margin;
+        });
+        if (allIn) break;
+        map.setZoom(map.getZoom() - 0.2);
+      }
+    }
+
+    // Mapa "de exhibicion", no de exploracion libre: sin pan/scroll-zoom/dblclick-zoom
+    // -- la navegacion es solo via clic en marcadores y el boton "volver al mapa". Evita
+    // que el usuario "se pierda" paneando/zoomeando dentro de una seccion que ademas
+    // queda pineada por scroll (ver ScrollTrigger mas abajo).
+    const map = new maplibregl.Map({
+      container: mapEl,
+      style: await buildDarkStyle(),
+      bounds: countryBounds,
+      fitBoundsOptions: { padding: 24 },
+      attributionControl: { compact: false },
+      dragPan: false,
+      scrollZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      dragRotate: false,
+      pitchWithRotate: false,
+      touchZoomRotate: false,
+      touchPitch: false,
+      keyboard: false,
+    });
+    ensureAllVisible(pins);
+
+    function makeMarkerEl(detail: boolean, delay: number, city: string) {
+      const el = document.createElement('span');
+      el.className = `territory__marker${detail ? ' territory__marker--detail' : ''}`;
+      el.tabIndex = 0;
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', city);
+      const glow = document.createElement('span');
+      glow.className = 'territory__pin-glow';
+      glow.style.animationDelay = `${delay}s`;
+      const dot = document.createElement('span');
+      dot.className = 'territory__pin-dot';
+      el.append(glow, dot);
+      return el;
+    }
+
+    function wireActivate(el: HTMLElement, onActivate: () => void) {
+      el.addEventListener('click', onActivate);
+      el.addEventListener('mouseenter', onActivate);
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onActivate();
+        }
+      });
+    }
+
+    const countryEntries: PinEntry[] = [];
+    const sectorEntries: PinEntry[] = [];
+
+    pins.forEach((p: any, i: number) => {
+      const el = makeMarkerEl(false, i * 0.5, p.city);
+      const marker = new maplibregl.Marker({ element: el }).setLngLat([p.lng, p.lat]);
+      const entry: PinEntry = { el, marker, city: p.city, text: p.text, image: p.image, zoomable: p.zoomable, lng: p.lng, lat: p.lat };
+      countryEntries.push(entry);
+      // El hover sigue actualizando la card (preview), igual que en el resto de los
+      // pines -- pero el ZOOM a Santiago solo se dispara con clic o activacion de
+      // teclado (Enter/Espacio), nunca con mouseenter: pedido explicito del Ingeniero,
+      // pasar el cursor por encima ya no debe disparar el zoom por accidente.
+      wireActivate(el, () => setActive(entry, countryEntries));
+      if (p.zoomable) {
+        el.addEventListener('click', () => zoomIn());
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            zoomIn();
+          }
+        });
+      }
+    });
+
+    santiagoPins.forEach((p: any, i: number) => {
+      const el = makeMarkerEl(true, i * 0.15, p.city);
+      const marker = new maplibregl.Marker({ element: el }).setLngLat([p.lng, p.lat]);
+      const entry: PinEntry = { el, marker, city: p.city, text: p.text, image: p.image, polo: p.polo, lng: p.lng, lat: p.lat };
+      sectorEntries.push(entry);
+      const activate = () => setActive(entry, sectorEntries);
+      el.addEventListener('mouseenter', activate);
+      el.addEventListener('click', activate);
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activate();
+        }
+      });
+    });
+
+    function showLayer(entries: PinEntry[]) {
+      entries.forEach((e) => e.marker.addTo(map));
+      if (reduced) return;
+      const els = entries.map((e) => e.el);
+      gsap.fromTo(els, { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(2)', stagger: 0.08 });
+    }
+
+    function hideLayer(entries: PinEntry[]) {
+      entries.forEach((e) => e.marker.remove());
+    }
+
+    let zoomed = false;
+    let currentBounds = countryBounds;
+
+    // fitBounds calcula centro/zoom en base al tamaño del contenedor EN ESE MOMENTO --
+    // si el layout de la pagina todavia se esta acomodando (fuentes/imagenes cargando
+    // async, breakpoint mobile con otros elementos reflow-eando), map.resize() por si
+    // solo NO vuelve a encuadrar (solo le avisa al renderer el nuevo tamaño de canvas,
+    // mantiene el mismo centro/zoom) -- un marcador podia terminar renderizado fuera del
+    // viewport real (bug detectado en mobile: Santiago a x:384 con viewport de 375px).
+    // Un ResizeObserver sobre el contenedor (no un simple window "resize", que no
+    // detecta reflow por contenido) resuelve esto de raiz: cualquier cambio real de
+    // tamaño vuelve a encuadrar sobre los bounds vigentes (pais o sector).
+    let resizeSettleTimer: ReturnType<typeof setTimeout> | undefined;
+    const ro = new ResizeObserver(() => {
+      // Debounce: durante el enganche del pin (GSAP inserta un "pin-spacer" y cambia
+      // el bloque a position:fixed) el contenedor puede reportar un tamaño transitorio
+      // incorrecto por uno o dos frames. Actuar sobre esa lectura de inmediato "horneaba"
+      // una camara mal encuadrada para siempre (bug real: Concepción/Santiago quedaban
+      // proyectados fuera del canvas visible tras pinnear). Esperar a que el tamaño deje
+      // de cambiar por un instante asegura actuar solo sobre el tamaño final, estable.
+      clearTimeout(resizeSettleTimer);
+      resizeSettleTimer = setTimeout(() => {
+        // Guard adicional: el primer disparo puede ocurrir antes de que el contenedor
+        // tenga layout real -- proyectar bounds sobre un viewport de tamaño cero produce
+        // coordenadas NaN dentro de MapLibre (cameraForBounds). El try/catch es respaldo.
+        if (mapEl.clientWidth < 20 || mapEl.clientHeight < 20) return;
+        map.resize();
+        try {
+          map.fitBounds(currentBounds, { padding: zoomed ? 40 : 24, maxZoom: zoomed ? 14 : undefined, animate: false });
+          ensureAllVisible(zoomed ? santiagoPins : pins);
+        } catch {
+          /* ver comentario arriba */
+        }
+      }, 120);
+    });
+    ro.observe(mapEl);
+    cleanups.push(() => clearTimeout(resizeSettleTimer));
+    cleanups.push(() => ro.disconnect());
+
+    function zoomIn() {
+      if (zoomed) return;
+      zoomed = true;
+      currentBounds = sectorBounds;
+      root!.classList.add('is-zoomed');
+      backBtn!.hidden = false;
+      hintEl!.hidden = true;
+      labelEl!.hidden = true;
+      hideLayer(countryEntries);
+      map.fitBounds(sectorBounds, { padding: 40, maxZoom: 14, animate: !reduced, duration: 1600 });
+      map.once('moveend', () => {
+        ensureAllVisible(santiagoPins);
+        showLayer(sectorEntries);
+      });
+      const first = sectorEntries[0];
+      if (first) setActive(first, sectorEntries);
+    }
+
+    function zoomOut() {
+      if (!zoomed) return;
+      zoomed = false;
+      currentBounds = countryBounds;
+      root!.classList.remove('is-zoomed');
+      backBtn!.hidden = true;
+      hintEl!.hidden = false;
+      labelEl!.hidden = false;
+      hideLayer(sectorEntries);
+      map.fitBounds(countryBounds, { padding: 24, animate: !reduced, duration: 1400 });
+      map.once('moveend', () => {
+        ensureAllVisible(pins);
+        showLayer(countryEntries);
+      });
+      const santiago = countryEntries.find((e) => e.zoomable);
+      if (santiago) setActive(santiago, countryEntries);
+    }
+
+    backBtn.addEventListener('click', zoomOut);
+    cleanups.push(() => backBtn!.removeEventListener('click', zoomOut));
+
+    // Entrada: los pines de pais solo se agregan al mapa (y aparecen con stagger) al
+    // llegar al viewport -- un callback (onEnter/once), no una timeline con ".from()" e
+    // immediateRender: si el ScrollTrigger no llega a dispararse (reflow tardio por
+    // imagenes/fuentes), el fallback de mas abajo (reduced motion) ya los agrego sin
+    // animar, nunca quedan "atascados" a mitad de una animacion -- bug real que afecto
+    // a la tarjeta antes con el SVG.
+    if (reduced) {
+      showLayer(countryEntries);
+    } else {
+      const st = ScrollTrigger.create({
+        trigger: root,
+        start: 'top 75%',
+        once: true,
+        onEnter: () => {
+          showLayer(countryEntries);
+          gsap.fromTo(panel, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.8, ease: 'expo.out', delay: 0.3 });
+        },
+      });
+      cleanups.push(() => st.kill());
+    }
+
+    // Scroll-jack pedido por el Ingeniero: al llegar a la seccion, el mapa + la tarjeta
+    // quedan fijos (pin) mientras el usuario explora (clic en marcadores, zoom a
+    // Santiago) sin que el scroll se los lleve -- una vez que sigue bajando la distancia
+    // pedida (150% del alto del bloque), el pin se libera y el scroll continua normal.
+    // Solo desktop (matchMedia): en mobile un pin "atrapa" al usuario sin dejarlo seguir
+    // leyendo (CLAUDE.md 15.6.1) -- en mobile la seccion se queda estatica/scrolleable.
+    const grid = document.querySelector<HTMLElement>('.territory__grid');
+    const mm = gsap.matchMedia();
+    if (grid) {
+      mm.add('(min-width: 768px)', () => {
+        const pinST = ScrollTrigger.create({
+          trigger: grid,
+          start: 'top top',
+          // 70%, no 150%: el pin se sentia demasiado largo (pedido explicito del
+          // Ingeniero) -- sigue dando lugar suficiente para clickear pines y hacer el
+          // zoom a Santiago antes de soltar, pero sin retener tanto el scroll.
+          end: '+=70%',
+          pin: true,
+          pinSpacing: true,
+          anticipatePin: 1,
+          // Sin onUpdate: el pin solo cambia la POSICION del bloque (fixed), no su
+          // tamaño -- llamar map.resize() en cada tick de scroll era innecesario y,
+          // peor, competia con el ResizeObserver de abajo: una lectura de tamaño
+          // transitoria durante el enganche del pin (inserción del pin-spacer) podia
+          // quedar "horneada" en la camara para siempre (bug real: Concepción/Santiago
+          // terminaban proyectados fuera del canvas visible tras pinnear).
+        });
+        return () => pinST.kill();
+      });
+    }
+    cleanups.push(() => mm.revert());
+
+    cleanupTerritory = () => {
+      clearTimeout(swapTimer);
+      cleanups.forEach((fn) => fn());
+      map.remove();
+    };
+  }
+
+  document.addEventListener('astro:page-load', initTerritory);
+  document.addEventListener('astro:before-swap', () => cleanupTerritory?.());
+</script>
+
+<script type="application/json" data-territory-data set:html={JSON.stringify({
+  locale,
+  pins: PINS.map((p) => ({ lat: p.lat, lng: p.lng, zoomable: p.zoomable, image: p.image, city: p[locale].city, text: p[locale].text })),
+  santiagoPins: SANTIAGO_PINS.map((p) => ({ lat: p.lat, lng: p.lng, image: p.image, city: p[locale].city, polo: p[locale].polo, text: p[locale].text })),
+})}></script>
+
+<style>
+  .territory {
+    position: relative;
+    z-index: 1;
+    margin-top: var(--space-2xl);
+    padding-top: var(--space-2xl);
+    border-top: 1px solid color-mix(in srgb, var(--border-inverse) 60%, transparent);
+  }
+
+  .territory__header {
+    display: flex;
+    align-items: center;
+    /* "flex-start" + margin-left:auto en el boton (no "space-between"): el label se
+       oculta al hacer zoom (ver script) y con space-between el boton "volver al mapa"
+       hubiera saltado al extremo izquierdo al quedar como unico hijo visible. */
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    /* Pegado al grid de abajo (pedido explicito) -- antes tenia el mismo espaciado
+       generoso que separa otras secciones, mucho aire para un titulo que "guia" al
+       mapa/tarjeta justo debajo. */
+    margin-bottom: var(--space-xs);
+  }
+
+  .territory__label {
+    font-family: var(--font-body);
+    /* 30% mas grande que el token base -- pedido puntual del Ingeniero para este header. */
+    font-size: calc(var(--text-xs) * 1.3);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    transition: font-size 0.3s var(--ease-out), letter-spacing 0.3s var(--ease-out), opacity 0.3s var(--ease-out);
+  }
+
+  /* Zoomed en Santiago: el label pasa a ser un eyebrow discreto (dato de contexto), no
+     un titulo que compita con el mapa -- mas chico, mas tracking, opacidad reducida. */
+  .territory__grid {
+    display: grid;
+    /* Columnas iguales (pedido explicito: "simetria perfecta" mapa/tarjeta) -- antes el
+       mapa vivia en una columna angosta (280px) y el panel en el resto. Con "stretch"
+       (no "start") ambos modulos quedan ademas con la MISMA altura, ya no depende de
+       cual columna sea mas alta: al fijar un min-height compartido (ver abajo) en
+       ambos hijos, el alto de la fila queda determinado por ese piso comun, no por el
+       contenido variable del panel (nombres de ciudad mas largos, ej. "Vitacura, Av.
+       Nueva Costanera" vs. "Antofagasta") -- por eso ya no reaparece el bug de "el mapa
+       salta" que "align-items:start" evitaba antes por otro camino. */
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    gap: var(--space-lg);
+  }
+
+  .territory__map-wrap {
+    position: relative;
+    min-width: 0;
+    /* width:100% explicito (no confiar en el stretch por defecto de grid): sin esto se
+       arma un ciclo de feedback real con el ResizeObserver del script -- el ancho del
+       contenedor quedaba influenciado por el tamaño del <canvas> hijo que MapLibre
+       redimensiona, el observer lo detectaba como "cambio de tamaño" y volvia a
+       redimensionar, convergiendo hacia un contenedor colapsado de ~32px (el tamaño de
+       un marcador). Con un ancho explicito el contenedor ya no depende de su contenido. */
+    width: 100%;
+    /* min-height (no height fijo): junto con el mismo min-height en .territory__panel
+       y align-items:stretch en el grid, ambos modulos quedan siempre a la misma altura
+       -- si el panel alguna vez necesita mas espacio que 70vh, la fila crece y el mapa
+       la sigue, en vez de quedar mas bajo que el panel. */
+    min-height: 70vh;
+    /* Estetica hermana con el panel: mismo radio, borde y sombra para que ambos se
+       sientan como modulos gemelos, no como elementos de peso visual distinto. El
+       radio es el token del tema (2px, "quiet luxury" -- nunca esquinas redondeadas
+       genericas), overflow:hidden recorta el mapa al mismo marco. */
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--border-inverse) 22%, transparent);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
+  }
+
+  .territory__map {
+    width: 100%;
+    height: 100%;
+    /* MapLibre exige un cursor de "arrastre" por defecto -- lo desactivamos junto con
+       dragPan:false en el script; esto es el respaldo visual. */
+    cursor: default;
+  }
+
+  :global(.maplibregl-map) {
+    background-color: var(--bg-primary-inverse);
+    font-family: var(--font-body);
+    outline: none;
+  }
+
+  :global(.maplibregl-ctrl-attrib) {
+    background-color: color-mix(in srgb, var(--bg-primary-inverse) 55%, transparent) !important;
+    backdrop-filter: blur(8px);
+  }
+  :global(.maplibregl-ctrl-attrib a),
+  :global(.maplibregl-ctrl-attrib) {
+    color: color-mix(in srgb, var(--text-secondary-inverse) 70%, transparent) !important;
+    font-size: 0.625rem !important;
+  }
+  :global(.maplibregl-ctrl-bottom-right) {
+    z-index: 5;
+  }
+
+  .territory__back {
+    flex-shrink: 0;
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-family: var(--font-body);
+    /* 30% mas grande que el token base, en linea con el label del mismo header. */
+    font-size: calc(var(--text-xs) * 1.3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-primary-inverse);
+    background-color: color-mix(in srgb, var(--bg-primary-inverse) 55%, transparent);
+    backdrop-filter: blur(10px);
+    border: 1px solid color-mix(in srgb, var(--border-inverse) 90%, transparent);
+    padding: calc(var(--space-xs) * 1.3) calc(var(--space-sm) * 1.3);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  }
+  .territory__back::before {
+    content: '←';
+  }
+  .territory__back:hover {
+    background-color: color-mix(in srgb, var(--bg-primary-inverse) 80%, transparent);
+    border-color: var(--accent-warm);
+  }
+
+  /* Marcadores -- HTML/CSS via L.divIcon, no los pines azules por defecto de Leaflet.
+     Estas clases las inyecta Leaflet en tiempo de ejecucion (no son parte del template
+     estatico de Astro), por eso van con :global(). Circulo color arena desaturado
+     (var(--accent-warm), nunca un hex fijo) con resplandor sutil -- mismo lenguaje
+     visual que el mapa SVG anterior de esta seccion. */
+  :global(.territory__marker) {
+    /* MapLibre ancla el marcador al CENTRO del elemento que se le pasa, usando su tamaño
+       renderizado -- a diferencia del iconSize explicito de Leaflet, aca el tamaño lo
+       fija este CSS. display:block + width/height explicitos son obligatorios: los
+       hijos (glow/dot) son position:absolute y sin esto el span colapsaria a 0x0.
+       "absolute", NO "relative": MapLibre posiciona el marcador con un transform:
+       translate(), pero eso NO saca al elemento del flujo normal del documento -- con
+       "relative" cada marcador seguia ocupando su alto (32px) en el flujo, y como son
+       varios hermanos <span> en el mismo contenedor, se apilaban verticalmente ADEMAS
+       del transform (bug real: cada marcador siguiente quedaba 32px mas abajo de lo
+       que le correspondia, acumulado -- Concepcion y Santiago terminaban fuera del
+       mapa visible). "absolute" saca cada marcador del flujo: el transform manda solo. */
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    outline: none;
+  }
+  :global(.territory__pin-glow) {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--accent-warm);
+    filter: blur(3px);
+    pointer-events: none;
+    animation: territory-breathe 3.2s ease-in-out infinite;
+  }
+  :global(.territory__pin-dot) {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--accent-warm);
+    pointer-events: none;
+    transition: transform var(--transition-fast);
+  }
+  :global(.territory__marker.is-active .territory__pin-dot),
+  :global(.territory__marker:hover .territory__pin-dot),
+  :global(.territory__marker:focus-visible .territory__pin-dot) {
+    transform: scale(1.5);
+  }
+  :global(.territory__marker--detail) {
+    width: 26px;
+    height: 26px;
+  }
+  :global(.territory__marker--detail .territory__pin-glow) {
+    width: 12px;
+    height: 12px;
+  }
+  :global(.territory__marker--detail .territory__pin-dot) {
+    width: 5.5px;
+    height: 5.5px;
+  }
+
+  @keyframes territory-breathe {
+    0%, 100% { transform: scale(0.85); opacity: 0.35; }
+    50% { transform: scale(1.25); opacity: 0.75; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.territory__pin-glow) {
+      animation: none;
+      opacity: 0.5;
+    }
+  }
+
+  .territory__panel {
+    /* Columnas iguales ahora (ver .territory__grid): el panel ya no necesita un
+       max-width angosto ni "justify-self:end" para no quedar perdido en una columna
+       ancha -- "stretch" (el default de grid) llena su columna, del mismo ancho que la
+       del mapa, para simetria real. "sticky" se mantiene como respaldo (ya no hace
+       falta con el pin del bloque completo, pero no estorba). */
+    position: sticky;
+    top: var(--space-xl);
+    min-height: 70vh;
+    /* Fondo/borde suavizados a pedido del Ingeniero: la tarjeta debe sentirse como texto
+       e imagen flotando sobre el fondo oscuro, no como un panel con borde duro y alto
+       contraste. El backdrop-filter aporta la separacion visual en vez del borde. */
+    background-color: color-mix(in srgb, var(--bg-secondary-inverse) 42%, transparent);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid color-mix(in srgb, var(--border-inverse) 22%, transparent);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
+    /* Mismo radio que el mapa (ver .territory__map-wrap) -- modulos gemelos. */
+    border-radius: var(--radius-lg);
+    /* Mas aire vertical (pedido explicito, "esta todo muy apretado"): la tarjeta ahora
+       mide hasta 70vh (simetria con el mapa) pero el padding seguia siendo el de antes,
+       pensado para una tarjeta mas baja -- el contenido quedaba apretado arriba con un
+       vacio abajo. Mas padding vertical que horizontal para no angostar el ancho del
+       texto ("Vitacura, Av. Nueva Costanera" necesita espacio para envolver bien). */
+    padding: var(--space-xl) var(--space-lg);
+    width: 100%;
+    /* Flex column: el contenido (imagen/titulo/texto/hint) se apila de arriba hacia
+       abajo sin depender del flujo por defecto, y overflow:hidden garantiza que nada
+       se desborde del marco fijo de la tarjeta (70vh) pase lo que pase con el largo
+       del texto real. */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: hidden;
+  }
+
+  .territory__panel-media {
+    overflow: hidden;
+    flex-shrink: 0;
+    margin-bottom: 2.5rem;
+    /* 16:9, no 3:2: una proporcion mas panoramica y baja evita que la imagen crezca
+       demasiado dentro de la tarjeta y le quite protagonismo al texto. */
+    aspect-ratio: 16 / 9;
+  }
+  .territory__panel-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.32s var(--ease-out), transform 0.32s var(--ease-out);
+  }
+  .territory__panel.is-swapping .territory__panel-img {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+
+  .territory__panel-city {
+    font-family: var(--font-heading);
+    /* --text-2xl (32px fijo), no --text-h3 (44px): a este tamaño el titulo dominaba la
+       tarjeta y desbordaba con nombres largos ("Vitacura, Av. Nueva Costanera"). Sigue
+       siendo un token FIJO del tema -- nunca clamp()/vw, la escala tipografica de este
+       proyecto es fija a proposito, no fluida. */
+    font-size: var(--text-2xl);
+    line-height: 1.15;
+    color: var(--text-primary-inverse);
+    margin-bottom: 1.5rem;
+    transition: opacity 0.32s var(--ease-out), transform 0.32s var(--ease-out);
+  }
+  /* Slide-in-up + fade en vez de un simple fundido: el texto entra desde abajo cada vez
+     que se hace hover/tap sobre un pin distinto, en vez de aparecer estático. La salida
+     (0.32s) termina antes de que el script cambie el contenido a los 320ms -- si no, la
+     entrada arrancaría a mitad de la animación de salida y se vería un salto brusco. */
+  .territory__panel.is-swapping .territory__panel-city,
+  .territory__panel.is-swapping .territory__panel-text {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  .territory__panel-text {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    color: var(--text-secondary-inverse);
+    transition: opacity 0.32s var(--ease-out), transform 0.32s var(--ease-out);
+  }
+
+  .territory__hint {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--text-secondary-inverse) 60%, transparent);
+    margin-top: var(--space-lg);
+  }
+
+  @media (max-width: 720px) {
+    .territory__grid {
+      grid-template-columns: 1fr;
+    }
+    .territory__map-wrap {
+      margin-inline: auto;
+      /* La simetria de 70vh es un pedido de escritorio (va de la mano con el pin de
+         scroll, tambien solo desktop) -- apilados en mobile, 70vh + 70vh seria una
+         seccion enorme. Vuelve al alto compacto de antes. */
+      min-height: 0;
+      height: min(56vh, 560px);
+    }
+    .territory__panel {
+      position: static;
+      justify-self: stretch;
+      max-width: none;
+      min-height: 0;
+      /* Sin esto el track de la grilla crece al min-content del panel (texto + padding)
+         en vez de encogerse al ancho del contenedor -- "grid blowout" clasico, causaba
+         ~19px de overflow horizontal en mobile aunque el panel mostrara stretch/100%. */
+      min-width: 0;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .territory__panel {
+      max-width: none;
+    }
+  }
+</style>

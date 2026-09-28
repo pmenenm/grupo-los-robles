@@ -110,11 +110,19 @@ const { class: className = '' } = Astro.props;
 
     const resize = () => {
       const r = host.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1) return;
       renderer.setSize(r.width, r.height);
       program.uniforms.uRes.value = [gl.canvas.width, gl.canvas.height];
     };
     resize();
-    window.addEventListener('resize', resize);
+    // ResizeObserver, no solo window "resize": el host puede crecer sin que cambie el
+    // tamaño de la ventana -- ej. un ScrollTrigger con pin en algun descendiente (como
+    // el mapa de TerritoryMap) inserta un "pin-spacer" que alarga la seccion DESPUES
+    // de este resize() inicial. Sin esto el canvas se quedaba con el buffer del alto
+    // viejo (mas corto) y el resto de la seccion, ya crecida, mostraba el --bg-primario
+    // solido por debajo -- bug real, corte horizontal visible al hacer scroll.
+    const ro = new ResizeObserver(() => resize());
+    ro.observe(host);
 
     let raf = 0, running = false, t0 = performance.now();
     const loop = (now) => {
@@ -133,7 +141,7 @@ const { class: className = '' } = Astro.props;
 
     cleanups.push(() => {
       stop(); io.disconnect();
-      window.removeEventListener('resize', resize);
+      ro.disconnect();
       document.removeEventListener('visibilitychange', onVis);
       const ext = gl.getExtension('WEBGL_lose_context'); ext && ext.loseContext();
     });

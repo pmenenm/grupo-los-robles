@@ -76,7 +76,7 @@ html {
      Excepción única y deliberada: el wordmark billboard de Footer.astro
      (.site-footer__giant) NO usa estos tokens — necesita escalar con vw para caber en
      una sola línea a cualquier ancho de pantalla; ver comentario en ese archivo. */
-  --text-display: 88px; /* H1 único por página (Hero) + cierres tipo CTA gigante */
+  --text-display: 72px; /* H1 único por página (Hero) + cierres tipo CTA gigante */
   --text-h2:      60px; /* todo <h2> de sección: "Nuestras Divisiones", "Contacto", CTA inversionistas */
   --text-h3:      44px; /* todo <h3>: nombre de división, subtítulos de card — sin excepción, sin variante "destacada" */
 

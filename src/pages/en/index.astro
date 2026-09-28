@@ -24,8 +24,10 @@ const _hero = {
   headline: 'Five industries.<br/>One standard<br/>of excellence.',
   subheadline:
     'A Chilean holding that invests in, operates and grows leading brands in gastronomy, fashion, agribusiness, technology and real estate.',
-  ctaText: 'Discover our portfolio',
-  ctaHref: '#divisiones',
+  ctaPrimaryText: 'Explore our divisions',
+  ctaPrimaryHref: '#divisiones',
+  ctaSecondaryText: "Let's talk",
+  ctaSecondaryHref: '#contacto',
   images: [
     { src: '/images/lujo-silencioso/hero-interior.jpg', alt: 'Minimalist architectural interior' },
     { src: '/images/lujo-silencioso/hero-agricola.jpg', alt: 'Farmland at dusk' },
@@ -171,14 +173,16 @@ const _revealImages = [
     eyebrow={_hero.eyebrow}
     headline={_hero.headline}
     subheadline={_hero.subheadline}
-    ctaText={_hero.ctaText}
-    ctaHref={_hero.ctaHref}
+    ctaPrimaryText={_hero.ctaPrimaryText}
+    ctaPrimaryHref={_hero.ctaPrimaryHref}
+    ctaSecondaryText={_hero.ctaSecondaryText}
+    ctaSecondaryHref={_hero.ctaSecondaryHref}
     images={_hero.images}
   />
 
   <IndustriesGallery eyebrow="01" label="Our Divisions" divisions={_divisions} />
 
-  <ManifestoSection eyebrow={_manifesto.eyebrow} lines={_manifesto.lines} />
+  <ManifestoSection eyebrow={_manifesto.eyebrow} lines={_manifesto.lines} locale="en" />
 
   <ContactReveal
     contact={_contact}

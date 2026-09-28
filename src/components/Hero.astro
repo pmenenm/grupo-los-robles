@@ -7,8 +7,10 @@ const {
   eyebrow = 'Grupo Los Robles',
   headline = 'Cinco industrias.<br/>Un mismo estándar<br/>de excelencia.',
   subheadline = '',
-  ctaText = 'Descubra nuestro portafolio',
-  ctaHref = '#divisiones',
+  ctaPrimaryText = 'Conoce nuestras divisiones',
+  ctaPrimaryHref = '#divisiones',
+  ctaSecondaryText = 'Conversemos',
+  ctaSecondaryHref = '#contacto',
   images = [],
 } = Astro.props;
 ---
@@ -29,10 +31,13 @@ const {
   </div>
 
   <div class="container hero__inner">
-    <p class="hero__eyebrow" data-hero-fade>{eyebrow}</p>
+    <p class="hero__eyebrow" data-hero-eyebrow>{eyebrow}</p>
     <h1 class="hero__headline" data-hero-fade set:html={headline} />
     {subheadline && <p class="hero__sub" data-hero-fade>{subheadline}</p>}
-    <a href={ctaHref} class="hero__cta" data-hero-fade>{ctaText}</a>
+    <div class="hero__cta-group">
+      <a href={ctaPrimaryHref} class="hero__cta" data-hero-fade>{ctaPrimaryText}</a>
+      <a href={ctaSecondaryHref} class="hero__cta" data-hero-fade>{ctaSecondaryText}</a>
+    </div>
   </div>
 
   <div class="hero__scrollcue" aria-hidden="true">
@@ -80,10 +85,27 @@ const {
     });
   }
 
+  // Mientras LogoIntro.astro muestra el logo grande centrado (sin scroll), el eyebrow
+  // compite visualmente con él — se oculta acá con el mismo umbral (40px) que usa
+  // LogoIntro/Header, y vuelve a aparecer en cuanto ese logo se retira.
+  let cleanupHeroEyebrow: (() => void) | undefined;
+
+  function initHeroEyebrow() {
+    const eyebrow = document.querySelector<HTMLElement>('[data-hero-eyebrow]');
+    if (!eyebrow) return;
+
+    const onScroll = () => eyebrow.classList.toggle('is-hidden-by-logo', window.scrollY <= 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    cleanupHeroEyebrow = () => window.removeEventListener('scroll', onScroll);
+  }
+
   document.addEventListener('astro:page-load', () => {
     initHeroVista();
     initHeroEntrance();
+    initHeroEyebrow();
   });
+  document.addEventListener('astro:before-swap', () => cleanupHeroEyebrow?.());
 </script>
 
 <style>
@@ -91,7 +113,7 @@ const {
     position: relative;
     min-height: 100svh;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     overflow: hidden;
     color-scheme: dark;
   }
@@ -134,7 +156,8 @@ const {
   .hero__inner {
     position: relative;
     z-index: 1;
-    padding-block: var(--space-lg);
+    padding-top: var(--space-lg);
+    padding-bottom: var(--space-lg);
   }
 
   .hero__eyebrow {
@@ -145,6 +168,11 @@ const {
     color: var(--text-primary-inverse);
     margin-bottom: var(--space-sm);
     text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4);
+    opacity: 1;
+    transition: opacity var(--transition-smooth);
+  }
+  .hero__eyebrow.is-hidden-by-logo {
+    opacity: 0;
   }
 
   .hero__headline {
@@ -162,7 +190,7 @@ const {
   .hero__sub {
     font-family: var(--font-body);
     font-weight: 300;
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
     line-height: 1.6;
     color: var(--text-primary-inverse);
     max-width: 48ch;
@@ -170,17 +198,23 @@ const {
     text-shadow: 0 1px 16px rgba(0, 0, 0, 0.4);
   }
 
+  .hero__cta-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-top: var(--space-lg);
+  }
+
   .hero__cta {
     display: inline-block;
-    margin-top: var(--space-lg);
     font-family: var(--font-body);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-primary-inverse);
     text-decoration: none;
     border: 1px solid color-mix(in srgb, var(--text-primary-inverse) 70%, transparent);
-    padding: var(--space-sm) var(--space-lg);
+    padding: var(--space-xs) var(--space-md);
     transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
   }
   .hero__cta:hover {
@@ -214,6 +248,11 @@ const {
 
   @media (max-width: 640px) {
     .hero__scrollcue { display: none; }
+
+    /* Espacio para LogoIntro.astro: en mobile el contenido del Hero (centrado
+       verticalmente) puede desbordar y su eyebrow queda pegado bajo el logo fijo de
+       arriba — este padding le da el despeje exacto que ocupa esa barra. */
+    .hero__inner { padding-top: 6rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {

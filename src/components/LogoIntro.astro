@@ -1,0 +1,105 @@
+---
+// src/components/LogoIntro.astro
+// Momento de entrada inspirado en grupoparaguas.com/#historia (referencia del cliente,
+// Andrés Belfus): el wordmark aparece grande y centrado arriba, flotando sobre el Hero
+// sin fondo, con el selector de idioma a la derecha. Al primer scroll (mismo umbral que
+// Header.astro, 40px) se desvanece y el Header compacto (logo chico a la izquierda) toma
+// su lugar — dos elementos independientes que cruzan opacidad, no una fusión de ambos.
+import siteEs from '../../contracts/site.json';
+import siteEn from '../../contracts/site.en.json';
+
+const { locale = 'es' } = Astro.props;
+const site = locale === 'en' ? siteEn : siteEs;
+const { siteName } = site.site;
+
+const altHref = locale === 'en' ? '/' : '/en/';
+const altLabel = locale === 'en' ? 'ES' : 'EN';
+---
+
+<div class="logo-intro" data-logo-intro>
+  <a href={locale === 'en' ? '/en/#inicio' : '#inicio'} class="logo-intro__logo" aria-label={`${siteName}, ${locale === 'en' ? 'Home' : 'Inicio'}`}>
+    <img src="/images/LOGO-LOSrOBLES-BLANCO.webp" alt={siteName} />
+  </a>
+  <a href={altHref} class="logo-intro__lang" aria-label={`${locale === 'en' ? 'Switch to Spanish' : 'Cambiar a inglés'}`}>{altLabel}</a>
+</div>
+
+<script>
+  let cleanupLogoIntro: (() => void) | undefined;
+
+  function initLogoIntro() {
+    const el = document.querySelector<HTMLElement>('[data-logo-intro]');
+    if (!el) return;
+
+    const onScroll = () => el.classList.toggle('is-scrolled', window.scrollY > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    cleanupLogoIntro = () => window.removeEventListener('scroll', onScroll);
+  }
+
+  document.addEventListener('astro:page-load', initLogoIntro);
+  document.addEventListener('astro:before-swap', () => cleanupLogoIntro?.());
+</script>
+
+<style>
+  .logo-intro {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: var(--space-md);
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity var(--transition-smooth), transform var(--transition-smooth);
+  }
+
+  /* Inverso de Header.astro: visible primero, se retira al hacer scroll */
+  .logo-intro.is-scrolled {
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+  }
+
+  .logo-intro__logo {
+    display: inline-flex;
+  }
+  .logo-intro__logo img {
+    height: clamp(2.5rem, 6vw, 4.5rem);
+    width: auto;
+  }
+
+  .logo-intro__lang {
+    position: absolute;
+    right: var(--space-md);
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.1em;
+    color: #f2ece0;
+    text-decoration: none;
+    opacity: 0.75;
+    transition: opacity var(--transition-fast);
+  }
+  .logo-intro__lang:hover {
+    opacity: 1;
+  }
+
+  @media (max-width: 640px) {
+    .logo-intro {
+      padding-block: var(--space-sm);
+    }
+    .logo-intro__logo img {
+      height: clamp(2rem, 8vw, 2.5rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .logo-intro {
+      transition: none;
+    }
+  }
+</style>

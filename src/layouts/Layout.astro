@@ -3,6 +3,7 @@
 import BaseHead from '../components/BaseHead.astro';
 import Preloader from '../components/Preloader.astro';
 import Header from '../components/Header.astro';
+import LogoIntro from '../components/LogoIntro.astro';
 import SideNav from '../components/SideNav.astro';
 import Footer from '../components/Footer.astro';
 import StickyCTA from '../components/StickyCTA.astro';
@@ -40,6 +41,7 @@ const {
   <body>
     <Preloader />
     <Header locale={locale} />
+    <LogoIntro locale={locale} />
     <SideNav locale={locale} />
 
     <div id="smooth-wrapper">

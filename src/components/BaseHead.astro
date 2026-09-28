@@ -20,16 +20,27 @@ const {
      = 'manual' NO alcanza solo: en Chrome, al recargar, el motor reimpone la posición de
      scroll durante el parseo del HTML (después de que este script corre, pero antes de
      DOMContentLoaded) — por eso se refuerza el reset en varios puntos del ciclo de carga.
-     Si la URL trae un ancla (ej. /#contacto) se respeta — no se fuerza el top ahí. -->
+     Pedido explícito del Ingeniero: al refrescar (F5) SIEMPRE vuelve al tope, incluso si
+     la URL trae un ancla (ej. /#contacto) -- se detecta el reload con la Navigation Timing
+     API y se limpia el hash con replaceState para que el navegador no vuelva a saltar ahí
+     por su cuenta. Un link entrante con ancla (no un refresh) sigue respetándose. -->
 <script is:inline>
   (function () {
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
-    if (window.location.hash) return;
+
+    var navEntry = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || null;
+    var isReload = navEntry ? navEntry.type === 'reload' : false;
+
+    if (window.location.hash && !isReload) return;
+
+    if (isReload && window.location.hash) {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
 
     var toTop = function () {
-      if (!window.location.hash) window.scrollTo(0, 0);
+      window.scrollTo(0, 0);
     };
     toTop();
     document.addEventListener('DOMContentLoaded', toTop);

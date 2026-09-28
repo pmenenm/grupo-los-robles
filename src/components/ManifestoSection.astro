@@ -3,18 +3,22 @@
 // Formato: momento de marca — sección invertida a modo oscuro con shader WebGL iridiscente
 // (§17, "un momento fuerte por página") + franja editorial con reveal de líneas (SplitText + scrub).
 import ShaderField from './ShaderField.astro';
+import TerritoryMap from './TerritoryMap.astro';
 
 const {
   eyebrow = '03',
   lines = [], // array de strings, cada uno se revela como su propia línea
   lineAsset = '/images/nosotros-linea.webp',
   verticalLabel = 'Grupo Los Robles',
+  locale = 'es',
 } = Astro.props;
 ---
 
 <section class="manifesto" data-gsap-section="manifesto">
-  <ShaderField class="manifesto__shaderfield" />
-  <img class="manifesto__line" src={lineAsset} alt="" aria-hidden="true" loading="lazy" />
+  <div class="manifesto__bg" aria-hidden="true">
+    <ShaderField class="manifesto__shaderfield" />
+    <img class="manifesto__line" src={lineAsset} alt="" loading="lazy" />
+  </div>
   <span class="manifesto__vertical" aria-hidden="true">{verticalLabel}</span>
 
   <div class="container manifesto__inner">
@@ -27,6 +31,8 @@ const {
         </>
       ))}
     </p>
+
+    <TerritoryMap locale={locale} />
   </div>
 </section>
 
@@ -96,10 +102,20 @@ const {
     --border: var(--border-inverse);
 
     position: relative;
-    overflow: hidden;
+    /* SIN overflow:hidden aca -- rompia el position:sticky del panel de TerritoryMap.astro
+       (un ancestro con cualquier overflow != visible invalida sticky en sus descendientes,
+       bug real detectado probando el scroll). El recorte del fondo decorativo (shader +
+       linea, que sangran a proposito fuera del borde) ahora vive en .manifesto__bg. */
     padding-block: var(--space-2xl);
     background-color: var(--bg-primary);
     color-scheme: dark;
+  }
+
+  .manifesto__bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
   }
 
   .manifesto :global(.manifesto__shaderfield) {
@@ -119,10 +135,15 @@ const {
   }
 
   .manifesto__line {
+    /* El asset es una tira decorativa muy angosta y alta (29x364px real) -- fijar el
+       ancho (como antes) dejaba el alto en "auto", y al ser la sección ahora más alta
+       (TerritoryMap.astro) el navegador la estiraba a ~2000px+ de alto, mucho más
+       grande de lo que el diseño original preveía. Se fija por alto en su lugar. */
     position: absolute;
     right: -4%;
     bottom: -8%;
-    width: min(42vw, 480px);
+    height: min(55vh, 460px);
+    width: auto;
     opacity: 0.35;
     z-index: 0;
     pointer-events: none;
