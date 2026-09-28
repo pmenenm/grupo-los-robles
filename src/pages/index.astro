@@ -23,14 +23,8 @@ const _seo = {
 const _schema = site.organizationSchema;
 
 const _hero = {
-  eyebrow: 'Grupo Los Robles, más de 20 años de trayectoria',
-  headline: 'Cinco industrias.<br/>Un mismo estándar<br/>de excelencia.',
-  subheadline:
-    'Un holding chileno que invierte, opera y hace crecer marcas líderes en gastronomía, moda, agroindustria, tecnología e inmobiliaria.',
-  ctaPrimaryText: 'Conoce nuestras divisiones',
-  ctaPrimaryHref: '#divisiones',
-  ctaSecondaryText: 'Conversemos',
-  ctaSecondaryHref: '#contacto',
+  eyebrow: 'Un holding chileno que invierte, opera y hace crecer marcas líderes.',
+  headline: 'Cinco industrias.<br/>Un mismo estándar de excelencia.',
   images: [
     { src: 'images/lujo-silencioso/hero-interior.jpg', alt: 'Interior arquitectónico minimalista' },
     { src: 'images/lujo-silencioso/hero-agricola.jpg', alt: 'Campos agrícolas al atardecer' },
@@ -175,12 +169,8 @@ const _revealImages = [
   <Hero
     eyebrow={_hero.eyebrow}
     headline={_hero.headline}
-    subheadline={_hero.subheadline}
-    ctaPrimaryText={_hero.ctaPrimaryText}
-    ctaPrimaryHref={_hero.ctaPrimaryHref}
-    ctaSecondaryText={_hero.ctaSecondaryText}
-    ctaSecondaryHref={_hero.ctaSecondaryHref}
     images={_hero.images}
+    locale="es"
   />
 
   <IndustriesGallery eyebrow="01" label="Nuestras Divisiones" divisions={_divisions} />

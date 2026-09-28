@@ -6,12 +6,8 @@
 const {
   eyebrow = 'Grupo Los Robles',
   headline = 'Cinco industrias.<br/>Un mismo estándar<br/>de excelencia.',
-  subheadline = '',
-  ctaPrimaryText = 'Conoce nuestras divisiones',
-  ctaPrimaryHref = '#divisiones',
-  ctaSecondaryText = 'Conversemos',
-  ctaSecondaryHref = '#contacto',
   images = [],
+  locale = 'es',
 } = Astro.props;
 ---
 
@@ -33,40 +29,69 @@ const {
   <div class="container hero__inner">
     <p class="hero__eyebrow" data-hero-eyebrow>{eyebrow}</p>
     <h1 class="hero__headline" data-hero-fade set:html={headline} />
-    {subheadline && <p class="hero__sub" data-hero-fade>{subheadline}</p>}
-    <div class="hero__cta-group">
-      <a href={ctaPrimaryHref} class="hero__cta" data-hero-fade>{ctaPrimaryText}</a>
-      <a href={ctaSecondaryHref} class="hero__cta" data-hero-fade>{ctaSecondaryText}</a>
-    </div>
   </div>
+
+  <div class="hero__divider" aria-hidden="true"></div>
 
   <div class="hero__scrollcue" aria-hidden="true">
     <span></span>
   </div>
+
+  {images.length > 1 && (
+    <div class="hero__slider-controls">
+      <button type="button" class="hero__slider-btn" data-hero-prev aria-label={locale === 'en' ? 'Previous photo' : 'Foto anterior'}>‹</button>
+      <button type="button" class="hero__slider-btn" data-hero-next aria-label={locale === 'en' ? 'Next photo' : 'Foto siguiente'}>›</button>
+    </div>
+  )}
 </section>
 
 <script>
   import { gsap } from 'gsap';
 
   let rotateTimer;
+  let cleanupHeroSlider;
 
   function initHeroVista() {
     const slides = document.querySelectorAll('[data-hero-slide]');
     if (slides.length < 2) return;
     clearInterval(rotateTimer);
+    cleanupHeroSlider?.();
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) return;
 
-    let current = 0;
-    rotateTimer = setInterval(() => {
-      const next = (current + 1) % slides.length;
+    let current = Math.max(0, [...slides].findIndex((s) => s.classList.contains('is-active')));
+
+    function goTo(index) {
+      const next = (index + slides.length) % slides.length;
+      if (next === current) return;
       slides[current].classList.remove('is-active');
       slides[next].classList.add('is-active');
       current = next;
-    }, 6500);
+    }
 
-    document.addEventListener('astro:before-swap', () => clearInterval(rotateTimer), { once: true });
+    function startAuto() {
+      if (reduced) return;
+      clearInterval(rotateTimer);
+      rotateTimer = setInterval(() => goTo(current + 1), 6500);
+    }
+
+    // Flechas manuales: pausan el auto-avance un ciclo entero (no lo cancelan del
+    // todo, la galeria sigue "viva") antes de reanudarlo, para que un clic no quede
+    // peleando con el timer si el usuario justo interactua cuando estaba por rotar.
+    const prevBtn = document.querySelector('[data-hero-prev]');
+    const nextBtn = document.querySelector('[data-hero-next]');
+    const onPrev = () => { goTo(current - 1); startAuto(); };
+    const onNext = () => { goTo(current + 1); startAuto(); };
+    prevBtn?.addEventListener('click', onPrev);
+    nextBtn?.addEventListener('click', onNext);
+    cleanupHeroSlider = () => {
+      prevBtn?.removeEventListener('click', onPrev);
+      nextBtn?.removeEventListener('click', onNext);
+    };
+
+    startAuto();
+
+    document.addEventListener('astro:before-swap', () => { clearInterval(rotateTimer); cleanupHeroSlider?.(); }, { once: true });
   }
 
   function initHeroEntrance() {
@@ -162,11 +187,13 @@ const {
 
   .hero__eyebrow {
     font-family: var(--font-body);
-    font-size: var(--text-sm);
-    letter-spacing: 0.22em;
+    font-size: var(--text-xs);
+    letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: var(--text-primary-inverse);
-    margin-bottom: var(--space-sm);
+    /* 70% -- pedido explicito ("baja su opacidad"): via color-mix sobre el token del
+       tema, nunca un rgba(255,255,255,...) hardcodeado. */
+    color: color-mix(in srgb, var(--text-primary-inverse) 70%, transparent);
+    margin-bottom: 1.5rem;
     text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4);
     opacity: 1;
     transition: opacity var(--transition-smooth);
@@ -177,56 +204,25 @@ const {
 
   .hero__headline {
     font-family: var(--font-heading);
+    /* Token fijo (72px), no clamp()/vw -- la escala tipografica de H1/H2/H3 en este
+       proyecto es siempre fija, nunca fluida (regla del Ingeniero). */
     font-size: var(--text-display);
     font-weight: 500;
-    line-height: 1.08;
+    line-height: 1.1;
     letter-spacing: -0.01em;
     color: var(--text-primary-inverse);
     text-wrap: balance;
-    max-width: 18ch;
+    /* Ancho suficiente para que "Un mismo estándar de excelencia." entre en una sola
+       linea (el <br/> del copy ya fuerza exactamente 2 lineas) -- con 18ch volvia a
+       partirse en 3, empujando el texto hasta pisar la linea divisoria de abajo. */
+    max-width: 34ch;
     text-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
-  }
-
-  .hero__sub {
-    font-family: var(--font-body);
-    font-weight: 300;
-    font-size: var(--text-base);
-    line-height: 1.6;
-    color: var(--text-primary-inverse);
-    max-width: 48ch;
-    margin-top: var(--space-md);
-    text-shadow: 0 1px 16px rgba(0, 0, 0, 0.4);
-  }
-
-  .hero__cta-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-    margin-top: var(--space-lg);
-  }
-
-  .hero__cta {
-    display: inline-block;
-    font-family: var(--font-body);
-    font-size: var(--text-xs);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-primary-inverse);
-    text-decoration: none;
-    border: 1px solid color-mix(in srgb, var(--text-primary-inverse) 70%, transparent);
-    padding: var(--space-xs) var(--space-md);
-    transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
-  }
-  .hero__cta:hover {
-    background-color: var(--text-primary-inverse);
-    color: var(--bg-primary-inverse);
-    border-color: var(--text-primary-inverse);
   }
 
   .hero__scrollcue {
     position: absolute;
     left: 50%;
-    bottom: var(--space-md);
+    bottom: var(--space-xs);
     z-index: 1;
     transform: translateX(-50%);
     width: 1px;
@@ -246,8 +242,58 @@ const {
     100% { transform: translateY(250%); }
   }
 
+  .hero__divider {
+    position: absolute;
+    left: 0;
+    right: 0;
+    /* Mas abajo que antes (90px): con el titulo en 2 lineas mas anchas, esa distancia
+       no alcanzaba y la linea quedaba atravesando "de excelencia." -- verificado con
+       captura, no solo calculado. */
+    bottom: 48px;
+    z-index: 1;
+    width: 100%;
+    border-bottom: 1px solid color-mix(in srgb, var(--text-primary-inverse) 20%, transparent);
+    pointer-events: none;
+  }
+
+  .hero__slider-controls {
+    position: absolute;
+    z-index: 1;
+    /* Mismo valor que el padding-bottom de .hero__inner: alinea el borde inferior de
+       los botones con el borde inferior del H1 (pedido explicito). */
+    bottom: var(--space-lg);
+    right: var(--space-md);
+    display: flex;
+    gap: var(--space-xs);
+  }
+
+  .hero__slider-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--text-primary-inverse) 40%, transparent);
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-lg);
+    line-height: 1;
+    color: color-mix(in srgb, var(--text-primary-inverse) 80%, transparent);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
+  }
+  .hero__slider-btn:hover,
+  .hero__slider-btn:focus-visible {
+    border-color: var(--text-primary-inverse);
+    color: var(--text-primary-inverse);
+    background-color: color-mix(in srgb, var(--text-primary-inverse) 10%, transparent);
+  }
+
   @media (max-width: 640px) {
     .hero__scrollcue { display: none; }
+    .hero__divider { bottom: 36px; }
+    .hero__slider-controls { bottom: var(--space-sm); right: var(--space-sm); }
 
     /* Espacio para LogoIntro.astro: en mobile el contenido del Hero (centrado
        verticalmente) puede desbordar y su eyebrow queda pegado bajo el logo fijo de
