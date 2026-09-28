@@ -22,6 +22,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Install, build, and upload site
         uses: withastro/action@v3
+        env:
+          # El fallback de GitHub Pages (pmenenm.github.io/grupo-los-robles/) se sirve
+          # bajo un subpath -- ver astro.config.mjs para como esto ajusta "base".
+          GH_PAGES_PREVIEW: 'true'
 
   deploy:
     needs: build

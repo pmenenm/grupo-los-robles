@@ -9,16 +9,16 @@ const { locale = 'es' } = Astro.props;
 const site = locale === 'en' ? siteEn : siteEs;
 const { siteName } = site.site;
 
-const altHref = locale === 'en' ? '/' : '/en/';
+const altHref = locale === 'en' ? '.' : 'en/';
 const altLabel = locale === 'en' ? 'ES' : 'EN';
 const openLabel = locale === 'en' ? 'Open menu' : 'Abrir menú';
 ---
 
 <header class="site-header" data-header>
   <div class="container site-header__inner">
-    <a href={locale === 'en' ? '/en/#inicio' : '#inicio'} class="logo" aria-label={`${siteName}, ${locale === 'en' ? 'Home' : 'Inicio'}`}>
-      <img class="logo__img logo__img--light" src="/images/LOGO-LOSrOBLES-BLANCO.webp" alt={siteName} />
-      <img class="logo__img logo__img--dark" src="/images/logo-losRobles.webp" alt={siteName} />
+    <a href={locale === 'en' ? 'en/#inicio' : '#inicio'} class="logo" aria-label={`${siteName}, ${locale === 'en' ? 'Home' : 'Inicio'}`}>
+      <img class="logo__img logo__img--light" src="images/LOGO-LOSrOBLES-BLANCO.webp" alt={siteName} />
+      <img class="logo__img logo__img--dark" src="images/logo-losRobles.webp" alt={siteName} />
     </a>
 
     <div class="site-header__actions">

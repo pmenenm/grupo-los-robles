@@ -6,7 +6,7 @@ import '../styles/tailwind.css';
 const {
   title,
   description,
-  image = '/images/default-og.jpg',
+  image = 'images/default-og.jpg',
   canonicalUrl = Astro.url.href,
   googleFontsUrl = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap',
 } = Astro.props;
@@ -14,6 +14,13 @@ const {
 
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Todas las referencias internas (imagenes, favicon, nav entre es/en) son
+     relativas (sin "/" inicial) para poder servir el sitio bajo un subpath (preview de
+     GitHub Pages en pmenenm.github.io/grupo-los-robles/) sin tocar cada ruta a mano --
+     el <base> nativo del navegador resuelve todo eso en runtime segun BASE_URL (que en
+     produccion real, con "base" sin configurar, es simplemente "/"). DEBE ir antes que
+     cualquier <link>/<img> que dependa de resolucion relativa. -->
+<base href={import.meta.env.BASE_URL} />
 
 <!-- Desactiva la restauración de scroll del navegador: sin esto, F5/recargar deja al
      usuario en la misma posición donde estaba antes de refrescar. history.scrollRestoration
@@ -56,7 +63,7 @@ const {
     setTimeout(toTop, 300);
   })();
 </script>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <meta name="generator" content={Astro.generator} />
 
 <!-- Canonical -->

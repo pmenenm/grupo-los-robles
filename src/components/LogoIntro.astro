@@ -12,13 +12,13 @@ const { locale = 'es' } = Astro.props;
 const site = locale === 'en' ? siteEn : siteEs;
 const { siteName } = site.site;
 
-const altHref = locale === 'en' ? '/' : '/en/';
+const altHref = locale === 'en' ? '.' : 'en/';
 const altLabel = locale === 'en' ? 'ES' : 'EN';
 ---
 
 <div class="logo-intro" data-logo-intro>
-  <a href={locale === 'en' ? '/en/#inicio' : '#inicio'} class="logo-intro__logo" aria-label={`${siteName}, ${locale === 'en' ? 'Home' : 'Inicio'}`}>
-    <img src="/images/LOGO-LOSrOBLES-BLANCO.webp" alt={siteName} />
+  <a href={locale === 'en' ? 'en/#inicio' : '#inicio'} class="logo-intro__logo" aria-label={`${siteName}, ${locale === 'en' ? 'Home' : 'Inicio'}`}>
+    <img src="images/LOGO-LOSrOBLES-BLANCO.webp" alt={siteName} />
   </a>
   <a href={altHref} class="logo-intro__lang" aria-label={`${locale === 'en' ? 'Switch to Spanish' : 'Cambiar a inglés'}`}>{altLabel}</a>
 </div>

@@ -10,6 +10,21 @@ import siteEn from '../../contracts/site.en.json';
 
 const { locale = 'es' } = Astro.props;
 const site = locale === 'en' ? siteEn : siteEs;
+
+// background-image inline (no en el <style> scoped): Astro extrae los <style> a un CSS
+// externo en produccion, y un url() ahi se resuelve relativo al archivo CSS (su propia
+// carpeta /_astro/), NO al <base> del documento -- rompia bajo el subpath de preview de
+// GitHub Pages. Como atributo style="" inline, el navegador SI lo resuelve respetando
+// el <base> del documento (BaseHead.astro), igual que cualquier otro src/href relativo.
+const base = import.meta.env.BASE_URL;
+const giantBg = [
+  'linear-gradient(180deg, color-mix(in srgb, var(--bg-primary-inverse) 55%, transparent) 0%, color-mix(in srgb, var(--bg-primary-inverse) 72%, transparent) 50%, color-mix(in srgb, var(--bg-primary-inverse) 88%, transparent) 100%)',
+  `url(${base}images/lujo-silencioso/division-gastronomia.jpg)`,
+  `url(${base}images/lujo-silencioso/division-vestuario.jpg)`,
+  `url(${base}images/lujo-silencioso/division-agricola.jpg)`,
+  `url(${base}images/lujo-silencioso/division-tecnologica.jpg)`,
+  `url(${base}images/lujo-silencioso/division-inmobiliario.jpg)`,
+].join(', ');
 const t = locale === 'en'
   ? {
       talk: "Let's talk →", nav: 'Navigation', navLabel: 'Footer navigation', contact: 'Contact',
@@ -31,7 +46,7 @@ const hasContactInfo = company.email || company.phone || company.address;
 <footer class="site-footer">
   <div class="container site-footer__top">
     <div class="site-footer__brand">
-      <img class="site-footer__logo" src="/images/LOGO-LOSrOBLES-BLANCO.webp" alt={siteName} />
+      <img class="site-footer__logo" src="images/LOGO-LOSrOBLES-BLANCO.webp" alt={siteName} />
       {tagline && <p class="site-footer__tagline">{tagline}</p>}
       <a href={orderUrl} class="site-footer__cta">{t.talk}</a>
 
@@ -70,7 +85,7 @@ const hasContactInfo = company.email || company.phone || company.address;
     </div>
   </div>
 
-  <p class="site-footer__giant" aria-hidden="true">{siteName.toUpperCase()}</p>
+  <p class="site-footer__giant" aria-hidden="true" style={`background-image: ${giantBg}`}>{siteName.toUpperCase()}</p>
 
   <div class="container site-footer__bottom">
     <p>&copy; {year} {company.legalName ?? siteName}. {t.rights}</p>
@@ -225,18 +240,9 @@ const hasContactInfo = company.email || company.phone || company.address;
     font-size: clamp(2.2rem, 9.7vw, 9.2rem);
     white-space: nowrap;
 
-    background-image:
-      linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--bg-primary-inverse) 55%, transparent) 0%,
-        color-mix(in srgb, var(--bg-primary-inverse) 72%, transparent) 50%,
-        color-mix(in srgb, var(--bg-primary-inverse) 88%, transparent) 100%
-      ),
-      url('/images/lujo-silencioso/division-gastronomia.jpg'),
-      url('/images/lujo-silencioso/division-vestuario.jpg'),
-      url('/images/lujo-silencioso/division-agricola.jpg'),
-      url('/images/lujo-silencioso/division-tecnologica.jpg'),
-      url('/images/lujo-silencioso/division-inmobiliario.jpg');
+    /* background-image: ver el atributo style="" inline en el markup -- movido ahi por
+       como Astro extrae este <style> a un CSS externo (ver comentario junto a giantBg
+       en el frontmatter). */
     background-repeat: no-repeat;
     background-position:
       0 0,
