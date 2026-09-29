@@ -10,7 +10,6 @@
 // cliente (ver docs/arquitectura-informacion.md, "Contenido pendiente del cliente") --
 // quien lo use en una pagina debe pasar valores reales via el prop `stats`.
 const {
-  eyebrow = 'impacto',
   // Pedido explicito del Ingeniero Lider: reemplaza el parrafo corporativo real (cifras
   // y hechos de "Nuestro Alcance" en si NO se tocan, siguen viniendo 100% del prop
   // `stats`) por una linea editorial corta, a proposito -- esto es copywriting/direccion
@@ -23,7 +22,6 @@ const {
 <section class="stats" data-gsap-section="stats">
   <div class="container stats__inner">
     <div class="stats__text" data-stats-head>
-      <span class="stats__eyebrow">( {eyebrow} )</span>
       <p class="stats__intro">{intro}</p>
     </div>
 
@@ -200,16 +198,6 @@ const {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--space-lg);
-  }
-
-  .stats__eyebrow {
-    display: block;
-    font-family: var(--font-body);
-    font-size: var(--text-xs);
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--text-primary) 50%, transparent);
-    margin-bottom: var(--space-lg);
   }
 
   .stats__intro {

@@ -193,20 +193,13 @@ const _revealImages = [
     locale="en"
   />
 
-  <Stats eyebrow="impact" intro={_stats.intro} stats={_stats.stats} />
+  <Stats intro={_stats.intro} stats={_stats.stats} />
 
   <IndustriesGallery label="Our Divisions" divisions={_divisions} />
 
   <VideoReveal locale="en" />
 
   <ManifestoSection lines={_manifesto.lines} locale="en" />
-
-  <ContactSection
-    title={_contact.title}
-    intro={_contact.intro}
-    divisions={_contact.divisions}
-    locale="en"
-  />
 
   <ContactReveal
     cta={_cta}
@@ -216,5 +209,12 @@ const _revealImages = [
   <VideoHero
     text="Leaders in the culinary industry, our main goal is to always deliver a unique experience, with the finest quality and unmatched service."
     ctaText="discover mil sabores"
+  />
+
+  <ContactSection
+    title={_contact.title}
+    intro={_contact.intro}
+    divisions={_contact.divisions}
+    locale="en"
   />
 </Layout>
