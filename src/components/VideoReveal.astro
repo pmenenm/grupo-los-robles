@@ -1,0 +1,204 @@
+---
+// src/components/VideoReveal.astro
+// Separador narrativo entre divisiones: un video de fondo (drone sobre nogales, origen
+// agricola del holding) que se "revela" de tarjeta recortada a pantalla completa mientras
+// el usuario scrollea, con un titulo editorial que aparece a mitad de la expansion.
+// Pin+scrub SOLO en desktop (gsap.matchMedia) -- en mobile este tipo de pin (el elemento
+// se transforma "en su eje" sin que el contenido avance) atrapa al usuario sin dejarlo
+// seguir leyendo (CLAUDE.md 15.6.1 #2), asi que ahi la seccion queda estatica: video ya
+// a pantalla completa, titulo ya visible, sin scroll-jack.
+const {
+  video = 'videos/valor-tierra-nogales.mp4',
+  poster = 'images/lujo-silencioso/valor-tierra-poster.jpg',
+  title,
+  locale = 'es',
+} = Astro.props;
+
+const t = locale === 'en'
+  ? { title: 'Five horizons.<br/>One standard.', alt: 'Aerial drone shot over a walnut orchard at dawn' }
+  : { title: 'Cinco horizontes.<br/>Un mismo estándar.', alt: 'Vista aérea de un nogal al amanecer' };
+
+const _title = title ?? t.title;
+---
+
+<section class="land-reveal" data-gsap-section="land-reveal">
+  <div class="land-reveal__stage">
+    <div class="land-reveal__media" data-land-media>
+      <video
+        class="land-reveal__video"
+        src={video}
+        poster={poster}
+        aria-label={t.alt}
+        muted
+        loop
+        playsinline
+        preload="none"
+      ></video>
+      <div class="land-reveal__scrim" aria-hidden="true"></div>
+    </div>
+
+    <div class="land-reveal__text" data-land-text>
+      <h2 class="land-reveal__title" set:html={_title} />
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  let mm;
+
+  function initLandReveal() {
+    mm?.revert();
+    const section = document.querySelector('[data-gsap-section="land-reveal"]');
+    const media = section?.querySelector('[data-land-media]');
+    const text = section?.querySelector('[data-land-text]');
+    const video = section?.querySelector('video');
+    if (!section || !media || !text) return;
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Autoplay real solo cuando entra en viewport -- preload="none" + play() bajo demanda
+    // evita cargar/decodificar el video si el usuario nunca llega a esta seccion. Con
+    // reduced-motion no se llama play() nunca: el <video poster> queda quieto mostrando
+    // el primer frame, fallback estatico sin necesidad de CSS extra.
+    if (video && !reduced) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) video.play().catch(() => {});
+          else video.pause();
+        });
+      }, { threshold: 0.1 });
+      io.observe(section);
+    }
+
+    if (reduced) return;
+
+    // Solo desktop: en mobile la tarjeta-que-se-expande con pin retiene el scroll sin que
+    // el contenido avance -- se queda estatica (ver CSS base, ya en su estado final).
+    mm = gsap.matchMedia();
+    mm.add('(min-width: 768px)', () => {
+      // Se anima un objeto plano (numeros), NUNCA el string de clip-path directamente:
+      // "inset(25% 20% 25% 20% round 12px)" tiene top==bottom y left==right, y el
+      // navegador lo serializa de vuelta como la forma corta "inset(25% 20% round 12px)"
+      // (3 numeros) apenas se lee su computed style. GSAP interpola clip-path por
+      // posicion de numero en el string -- si el punto de partida quedo colapsado a 3
+      // numeros y el destino ("inset(0% 0% 0% 0% round 0px)") tiene 5, el emparejamiento
+      // por indice se desalinea y cada lado termina animando a una velocidad distinta
+      // (bug real detectado: el lado inferior/izquierdo llegaba a 0 mucho antes que el
+      // superior/derecho, se veia como si "saltara" en vez de crecer parejo). Tweener
+      // dos numeros (inset vertical/horizontal) y construir el string nosotros mismos en
+      // cada frame elimina el problema de raiz: los 4 lados quedan siempre en simetria
+      // perfecta (arriba=abajo, izquierda=derecha) en todo momento del scroll.
+      const clip = { y: 25, x: 20, r: 12 };
+      const applyClip = () => {
+        media.style.clipPath = `inset(${clip.y}% ${clip.x}% round ${clip.r}px)`;
+      };
+      applyClip();
+      gsap.set(text, { opacity: 0, y: 40 });
+      // will-change: promueve el <video> a su propia capa de composicion ANTES de que
+      // arranque el scrub -- animar clip-path sobre video puede generar jank real (frames
+      // perdidos) si el navegador crea esa capa recien al primer cambio, en vez de un
+      // "salto" de posicion (que ya se verifico, con Playwright, que no existe).
+      media.style.willChange = 'clip-path';
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: 'top top',
+          // +=120%: 150% + hold largo (0.5) se sentia como scroll muerto (pedido
+          // explicito: "excesivamente largo") -- se acorta el rango total Y el hold para
+          // que la expansion ocupe la mayor parte del recorrido (mas agil, mas rapida al
+          // scroll) sin volver al corte abrupto original (issue previo, ya verificado con
+          // Playwright que no es un bug de pinSpacing/Lenis).
+          end: '+=120%',
+          scrub: true,
+          pin: true,
+          anticipatePin: 1,
+        },
+      });
+
+      tl.to(clip, { y: 0, x: 0, r: 0, ease: 'none', duration: 1, onUpdate: applyClip })
+        .to(text, { opacity: 1, y: 0, ease: 'power2.out', duration: 0.5 }, '<0.5')
+        // Hold breve (antes 0.5, ahora 0.15): solo lo justo para que el video llegue a
+        // pantalla completa un instante antes de soltar el pin, sin dejar un tramo largo
+        // de scroll donde no pasa nada.
+        .to({}, { duration: 0.15 });
+
+      return () => {
+        tl.scrollTrigger?.kill();
+        media.style.willChange = 'auto';
+      };
+    });
+  }
+
+  document.addEventListener('astro:page-load', initLandReveal);
+  document.addEventListener('astro:before-swap', () => mm?.revert());
+</script>
+
+<style>
+  .land-reveal {
+    position: relative;
+    color-scheme: dark;
+  }
+
+  .land-reveal__stage {
+    position: relative;
+    height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .land-reveal__media {
+    position: absolute;
+    inset: 0;
+    /* Estado final (sin JS / reduced-motion / mobile): video a sangre completa, sin
+       recorte -- la tarjeta recortada inicial es una animacion progresiva que el script
+       aplica solo en desktop (ver <script>), nunca el estado base. */
+    clip-path: inset(0% 0% 0% 0% round 0px);
+  }
+
+  .land-reveal__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .land-reveal__scrim {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--bg-primary-inverse) 35%, transparent);
+  }
+
+  .land-reveal__text {
+    position: relative;
+    z-index: 1;
+    padding-inline: var(--space-md);
+    text-align: center;
+  }
+
+  .land-reveal__title {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    text-transform: uppercase;
+    /* Token fijo (72px) -- este separador funciona como un momento "cierre tipo CTA
+       gigante" entre divisiones (uso explicitamente autorizado de --text-display fuera
+       del Hero, ver theme.css), nunca clamp()/vw. */
+    font-size: var(--text-display);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text-primary-inverse);
+    text-wrap: balance;
+  }
+
+  @media (max-width: 640px) {
+    .land-reveal__title {
+      font-size: var(--text-h2);
+    }
+  }
+
+</style>

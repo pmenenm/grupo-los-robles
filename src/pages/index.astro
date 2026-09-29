@@ -7,7 +7,9 @@
 import Layout from '../layouts/Layout.astro';
 import Hero from '../components/Hero.astro';
 import IndustriesGallery from '../components/IndustriesGallery.astro';
+import VideoReveal from '../components/VideoReveal.astro';
 import ManifestoSection from '../components/ManifestoSection.astro';
+import ContactSection from '../components/ContactSection.astro';
 import ContactReveal from '../components/ContactReveal.astro';
 import VideoHero from '../components/VideoHero.astro';
 import site from '../../contracts/site.json';
@@ -17,14 +19,14 @@ const _seo = {
   description: site.organizationSchema.description,
   ogImage: site.site.defaultOgImage,
   googleFontsUrl:
-    'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap',
+    'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap',
 };
 
 const _schema = site.organizationSchema;
 
 const _hero = {
   eyebrow: 'Un holding chileno que invierte, opera y hace crecer marcas líderes.',
-  headline: 'Cinco industrias.<br/>Un mismo estándar de excelencia.',
+  headline: 'Cinco industrias.<br/>Un mismo estándar<br/>de excelencia.',
   images: [
     { src: 'images/lujo-silencioso/hero-interior.jpg', alt: 'Interior arquitectónico minimalista' },
     { src: 'images/lujo-silencioso/hero-agricola.jpg', alt: 'Campos agrícolas al atardecer' },
@@ -38,7 +40,7 @@ const _divisions = [
     number: '01',
     name: 'Gastronomía',
     description:
-      'A través de Mil Sabores, operamos conceptos gastronómicos con identidad propia, cada uno con un estándar de calidad y servicio consistente.',
+      'A través de <a href="https://grupomilsabores.cl/" target="_blank" rel="noopener noreferrer"><strong>Mil Sabores</strong></a>, operamos conceptos gastronómicos con identidad propia, cada uno con un estándar de calidad y servicio consistente.',
     image: 'images/lujo-silencioso/division-gastronomia.jpg',
     alt: 'Plato de alta gastronomía servido con estilo minimalista',
     featured: true,
@@ -137,7 +139,6 @@ const _manifesto = {
 };
 
 const _contact = {
-  eyebrow: '03',
   title: 'Contacto',
   intro: 'Inversionistas, socios de marca y talento excepcional: conversemos.',
   divisions: _divisions.map((d) => d.name),
@@ -175,10 +176,18 @@ const _revealImages = [
 
   <IndustriesGallery eyebrow="01" label="Nuestras Divisiones" divisions={_divisions} />
 
+  <VideoReveal locale="es" />
+
   <ManifestoSection eyebrow={_manifesto.eyebrow} lines={_manifesto.lines} locale="es" />
 
+  <ContactSection
+    title={_contact.title}
+    intro={_contact.intro}
+    divisions={_contact.divisions}
+    locale="es"
+  />
+
   <ContactReveal
-    contact={_contact}
     cta={_cta}
     images={_revealImages}
   />

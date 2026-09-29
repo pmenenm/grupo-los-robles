@@ -22,15 +22,17 @@ const {
   <span class="manifesto__vertical" aria-hidden="true">{verticalLabel}</span>
 
   <div class="container manifesto__inner">
-    <span class="manifesto__eyebrow">{eyebrow}</span>
-    <p class="manifesto__text" data-manifesto-text>
-      {lines.map((line, i) => (
-        <>
-          {line}
-          {i < lines.length - 1 && <br />}
-        </>
-      ))}
-    </p>
+    <div class="manifesto__stage" data-manifesto-stage>
+      <span class="manifesto__eyebrow">{eyebrow}</span>
+      <p class="manifesto__text" data-manifesto-text>
+        {lines.map((line, i) => (
+          <>
+            {line}
+            {i < lines.length - 1 && <br />}
+          </>
+        ))}
+      </p>
+    </div>
 
     <TerritoryMap locale={locale} />
   </div>
@@ -51,10 +53,11 @@ const {
   function initManifesto() {
     split?.revert();
     const section = document.querySelector('[data-gsap-section="manifesto"]');
+    const stage = document.querySelector('[data-manifesto-stage]');
     const textEl = document.querySelector('[data-manifesto-text]');
-    if (!section || !textEl) return;
-    // Con reduced-motion se omite el split: el CSS base ya deja el texto en
-    // var(--text-primary-inverse), contraste total, sin animación.
+    if (!section || !stage || !textEl) return;
+    // Con reduced-motion se omite el split y el pin: el CSS base ya deja el texto
+    // centrado en pantalla (.manifesto__stage) y en contraste total, sin animación.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const styles = getComputedStyle(section);
@@ -70,17 +73,28 @@ const {
       autoSplit: true,
       onSplit(self) {
         gsap.set(self.chars, { color: colorDim });
-        return gsap.to(self.chars, {
-          color: colorFull,
-          stagger: 0.08,
-          ease: 'none',
+
+        // Pin: la cita queda fija al centro de la pantalla (.manifesto__stage,
+        // centrado horizontal y vertical) mientras se revela -- pedido explícito
+        // ("alineado al medio de la pantalla"). end corto (+=120% del viewport, no
+        // el largo de toda la sección con el mapa como antes) para que el efecto vaya
+        // más rápido con el scroll; el hold posterior (proporcional a la duración real
+        // del reveal, que crece con el stagger acumulado de todos los caracteres)
+        // detiene el pin ya revelado del todo para que se aprecie antes de soltarlo.
+        const reveal = gsap.to(self.chars, { color: colorFull, stagger: 0.06, ease: 'none', duration: 0.4 });
+        const tl = gsap.timeline({
           scrollTrigger: {
-            trigger: section,
-            start: 'top 75%',
-            end: 'bottom 60%',
-            scrub: 0.6,
+            trigger: stage,
+            start: 'top top',
+            end: '+=120%',
+            scrub: true,
+            pin: true,
+            anticipatePin: 1,
           },
         });
+        tl.add(reveal).to({}, { duration: reveal.duration() * 0.6 });
+
+        return tl;
       },
     });
   }
@@ -153,6 +167,18 @@ const {
     position: relative;
     z-index: 1;
     max-width: 920px;
+  }
+
+  /* Se pinea centrada (JS) mientras se revela -- min-height:100svh + flex centrado deja
+     la cita al medio de la pantalla, horizontal y vertical, pedido explícito. Sin JS/
+     reduced-motion queda igual de centrada, solo sin el pin ni la animación. */
+  .manifesto__stage {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
   }
 
   /* Texto vertical decorativo — técnica de layout no genérico (§15.5) */

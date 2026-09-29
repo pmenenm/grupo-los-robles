@@ -4,7 +4,9 @@
 import Layout from '../../layouts/Layout.astro';
 import Hero from '../../components/Hero.astro';
 import IndustriesGallery from '../../components/IndustriesGallery.astro';
+import VideoReveal from '../../components/VideoReveal.astro';
 import ManifestoSection from '../../components/ManifestoSection.astro';
+import ContactSection from '../../components/ContactSection.astro';
 import ContactReveal from '../../components/ContactReveal.astro';
 import VideoHero from '../../components/VideoHero.astro';
 import site from '../../../contracts/site.en.json';
@@ -14,14 +16,14 @@ const _seo = {
   description: site.organizationSchema.description,
   ogImage: site.site.defaultOgImage,
   googleFontsUrl:
-    'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap',
+    'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap',
 };
 
 const _schema = site.organizationSchema;
 
 const _hero = {
   eyebrow: 'A Chilean holding that invests in, operates and grows leading brands.',
-  headline: 'Five industries.<br/>One standard of excellence.',
+  headline: 'Five industries.<br/>One standard<br/>of excellence.',
   images: [
     { src: 'images/lujo-silencioso/hero-interior.jpg', alt: 'Minimalist architectural interior' },
     { src: 'images/lujo-silencioso/hero-agricola.jpg', alt: 'Farmland at dusk' },
@@ -35,7 +37,7 @@ const _divisions = [
     number: '01',
     name: 'Gastronomy',
     description:
-      'Through Mil Sabores, we operate gastronomic concepts with their own identity, each with a consistent standard of quality and service.',
+      'Through <a href="https://grupomilsabores.cl/" target="_blank" rel="noopener noreferrer"><strong>Mil Sabores</strong></a>, we operate gastronomic concepts with their own identity, each with a consistent standard of quality and service.',
     image: 'images/lujo-silencioso/division-gastronomia.jpg',
     alt: 'Fine dining plate served in minimalist style',
     featured: true,
@@ -134,7 +136,6 @@ const _manifesto = {
 };
 
 const _contact = {
-  eyebrow: '03',
   intro: "Investors, brand partners and exceptional talent: let's talk.",
   divisions: _divisions.map((d) => d.name),
 };
@@ -172,13 +173,20 @@ const _revealImages = [
 
   <IndustriesGallery eyebrow="01" label="Our Divisions" divisions={_divisions} />
 
+  <VideoReveal locale="en" />
+
   <ManifestoSection eyebrow={_manifesto.eyebrow} lines={_manifesto.lines} locale="en" />
 
+  <ContactSection
+    title={_contact.title}
+    intro={_contact.intro}
+    divisions={_contact.divisions}
+    locale="en"
+  />
+
   <ContactReveal
-    contact={_contact}
     cta={_cta}
     images={_revealImages}
-    locale="en"
   />
 
   <VideoHero

@@ -1,16 +1,14 @@
 ---
 // src/components/ContactReveal.astro
-// Contacto + CTA a inversionistas comparten UN fondo fijo (position:sticky) que se revela
-// a medida que ambas secciones suben con el scroll — referente: supreme-luxury.com
-// (footer__sticky-group + footer__cta-banner en su bundle), recreado con contenido,
-// imágenes y CSS propios. El fondo pertenece a esta sección — ya no vive en Footer.astro.
-import ContactSection from './ContactSection.astro';
-
+// CTA a inversionistas con un fondo fijo (position:sticky) que se revela a medida que
+// la seccion sube con el scroll — referente: supreme-luxury.com (footer__sticky-group
+// + footer__cta-banner en su bundle), recreado con contenido, imagenes y CSS propios.
+// El formulario de contacto YA NO vive aca (ver ContactSection.astro, ahora una tarjeta
+// solida independiente, standalone -- pedido explicito: "ya no debe flotar sobre
+// imagenes"). Esta seccion solo resuelve el momento CTA.
 const {
-  contact = {}, // { eyebrow, title, intro, divisions }
-  cta = {},     // { eyebrow, heading, ctaText, ctaHref }
+  cta = {}, // { eyebrow, heading, ctaText, ctaHref }
   images = [],
-  locale = 'es',
 } = Astro.props;
 ---
 
@@ -23,15 +21,6 @@ const {
   </div>
 
   <div class="reveal__fg">
-    <ContactSection
-      eyebrow={contact.eyebrow}
-      title={contact.title}
-      intro={contact.intro}
-      divisions={contact.divisions}
-      locale={locale}
-      overlay={true}
-    />
-
     <div class="reveal__cta" data-reveal-cta>
       <p class="reveal__cta-eyebrow">{cta.eyebrow}</p>
       <h2 class="reveal__cta-heading">{cta.heading}</h2>

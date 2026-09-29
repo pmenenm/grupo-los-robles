@@ -34,7 +34,7 @@ const {
 
         <div class="industries__body" data-industries-body>
           <h3 class="industries__name">{d.name}</h3>
-          <p class="industries__desc">{d.description}</p>
+          <p class="industries__desc" set:html={d.description} />
 
           {d.brands && d.brands.length > 0 && (
             <div class="industries__brand-carousel" data-brand-carousel>
@@ -211,6 +211,16 @@ const {
     line-height: 1.65;
     color: var(--text-secondary);
     max-width: 52ch;
+  }
+  .industries__desc a {
+    color: inherit;
+    text-decoration-color: color-mix(in srgb, var(--accent) 60%, transparent);
+    text-underline-offset: 0.15em;
+    transition: color var(--transition-fast);
+  }
+  .industries__desc a:hover,
+  .industries__desc a:focus-visible {
+    color: var(--accent);
   }
 
   .industries__cta {

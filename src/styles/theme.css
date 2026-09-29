@@ -16,6 +16,13 @@
   padding: 0;
 }
 
+/* Peso maximo 600 en todo el sitio, nunca bold real (700+) -- regla dura del proyecto
+   (§15.3). <strong>/<b> vienen con font-weight:bold (700) por defecto del navegador,
+   asi que hay que taparlo aca una sola vez en vez de en cada componente que los use. */
+strong, b {
+  font-weight: 600;
+}
+
 html {
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -51,7 +58,10 @@ html {
 
   /* Tipografías — las URL de Google Fonts se pasan via BaseHead.
      Playfair Display solo hasta peso 600 (regla dura §15.3 — nunca bold). */
-  --font-heading: 'Playfair Display', 'Georgia', serif;
+  /* Cormorant Garamond como serif principal (pedido explicito, pivote de direccion de
+     arte "clasico cinematografico"); Playfair Display queda como fallback declarado
+     (tal como se pidio, "en su defecto") si Cormorant no llega a cargar a tiempo. */
+  --font-heading: 'Cormorant Garamond', 'Playfair Display', 'Georgia', serif;
   --font-body:    'Inter', -apple-system, sans-serif;
   --font-mono:    'Courier New', monospace;
 

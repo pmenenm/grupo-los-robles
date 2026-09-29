@@ -1,13 +1,16 @@
 ---
 // src/components/ContactSection.astro
-// Formato: sticky lateral (título fijo) + formulario (§16.3), distinto de los formatos previos.
+// Rediseño editorial "quiet luxury" (referentes de alta hoteleria/bespoke): el
+// formulario deja de flotar sobre fotos (ver ContactReveal.astro, que ahora solo
+// resuelve el CTA a inversionistas) y pasa a vivir en una tarjeta solida, contenida,
+// sobre el fondo oscuro del sitio -- dos columnas: texto editorial a la izquierda,
+// formulario "hoja de papel" (solo lineas, sin bordes/fondos) a la derecha.
 const {
-  eyebrow = '04',
   title,
   intro,
-  divisions = [], // nombres de división para el select "Me interesa"
+  divisions = [], // nombres de division para el select "Me interesa"
   locale = 'es',
-  overlay = false, // true: transparente, para flotar sobre un fondo compartido (ver ContactReveal.astro)
+  location = 'Santiago, Chile',
 } = Astro.props;
 
 const t = locale === 'en'
@@ -15,60 +18,72 @@ const t = locale === 'en'
       title: title ?? 'Contact',
       name: 'Name', email: 'Email', interest: "I'm interested in",
       selectDivision: 'Select a division', message: 'Message',
-      send: 'Send', sent: 'Sent ✓',
+      send: 'Send message', sent: 'Sent ✓',
       success: "Thank you. We've received your message and will be in touch soon.",
+      replyNote: "We'll reply shortly.",
+      whereLabel: 'Where',
     }
   : {
       title: title ?? 'Contacto',
       name: 'Nombre', email: 'Correo', interest: 'Me interesa',
       selectDivision: 'Selecciona una división', message: 'Mensaje',
-      send: 'Enviar', sent: 'Enviado ✓',
+      send: 'Enviar mensaje', sent: 'Enviado ✓',
       success: 'Gracias. Recibimos tu mensaje y te contactaremos pronto.',
+      replyNote: 'Responderemos a la brevedad.',
+      whereLabel: 'Dónde',
     };
 ---
 
-<section class={`contact ${overlay ? 'is-overlay' : ''}`} id="contacto" data-gsap-section="contact">
-  {!overlay && <div class="contact__glow" aria-hidden="true"></div>}
+<section class="contact" id="contacto" data-gsap-section="contact">
+  <div class="container">
+    <div class="contact__card">
+      <div class="contact__info">
+        <h2 class="contact__title" data-contact-title>{t.title}</h2>
+        {intro && <p class="contact__intro">{intro}</p>}
 
-  <div class="container contact__inner">
-    <div class="contact__sticky">
-      <span class="contact__eyebrow">{eyebrow}</span>
-      <h2 class="contact__title" data-contact-title>{t.title}</h2>
-      {intro && <p class="contact__intro">{intro}</p>}
+        <div class="contact__meta">
+          <span class="contact__meta-label">{t.whereLabel}</span>
+          <span class="contact__meta-value">{location}</span>
+        </div>
+      </div>
+
+      <form class="contact__form" data-contact-form novalidate data-sent-label={t.sent}>
+        <div class="field">
+          <label for="cf-name">{t.name}</label>
+          <input id="cf-name" name="name" type="text" required autocomplete="name" />
+        </div>
+
+        <div class="field">
+          <label for="cf-email">{t.email}</label>
+          <input id="cf-email" name="email" type="email" required autocomplete="email" />
+        </div>
+
+        <div class="field">
+          <label for="cf-division">{t.interest}</label>
+          <select id="cf-division" name="division">
+            <option value="">{t.selectDivision}</option>
+            {divisions.map((d) => <option value={d}>{d}</option>)}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="cf-message">{t.message}</label>
+          <textarea id="cf-message" name="message" rows="4" required></textarea>
+        </div>
+
+        <div class="contact__submit-row">
+          <button type="submit" class="contact__submit" data-contact-submit>
+            <span data-submit-label>{t.send}</span>
+            <span class="contact__submit-arrow" aria-hidden="true">→</span>
+          </button>
+          <p class="contact__reply-note">{t.replyNote}</p>
+        </div>
+
+        <p class="contact__success" data-contact-success role="status" aria-live="polite">
+          {t.success}
+        </p>
+      </form>
     </div>
-
-    <form class="contact__form" data-contact-form novalidate data-sent-label={t.sent}>
-      <div class="field">
-        <label for="cf-name">{t.name}</label>
-        <input id="cf-name" name="name" type="text" required autocomplete="name" />
-      </div>
-
-      <div class="field">
-        <label for="cf-email">{t.email}</label>
-        <input id="cf-email" name="email" type="email" required autocomplete="email" />
-      </div>
-
-      <div class="field">
-        <label for="cf-division">{t.interest}</label>
-        <select id="cf-division" name="division">
-          <option value="">{t.selectDivision}</option>
-          {divisions.map((d) => <option value={d}>{d}</option>)}
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="cf-message">{t.message}</label>
-        <textarea id="cf-message" name="message" rows="4" required></textarea>
-      </div>
-
-      <button type="submit" class="contact__submit" data-contact-submit>
-        <span data-submit-label>{t.send}</span>
-      </button>
-
-      <p class="contact__success" data-contact-success role="status" aria-live="polite">
-        {t.success}
-      </p>
-    </form>
   </div>
 </section>
 
@@ -96,8 +111,8 @@ const t = locale === 'en'
       const qy = gsap.quickTo(submitBtn, 'y', { duration: 0.5, ease: 'power3.out' });
       submitBtn.addEventListener('mousemove', (e) => {
         const r = submitBtn.getBoundingClientRect();
-        qx((e.clientX - (r.left + r.width / 2)) * 0.3);
-        qy((e.clientY - (r.top + r.height / 2)) * 0.3);
+        qx((e.clientX - (r.left + r.width / 2)) * 0.25);
+        qy((e.clientY - (r.top + r.height / 2)) * 0.25);
       });
       submitBtn.addEventListener('mouseleave', () => {
         gsap.to(submitBtn, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.3)' });
@@ -125,81 +140,46 @@ const t = locale === 'en'
 </script>
 
 <style>
+  /* Seccion siempre en modo oscuro (igual criterio que ManifestoSection.astro): el
+     formulario ya no depende de flotar sobre una foto para tener contraste, asi que el
+     modo "overlay" condicional de antes desaparece -- esto es lo unico que hay ahora. */
   .contact {
+    --bg-primary: var(--bg-primary-inverse);
+    --bg-secondary: var(--bg-secondary-inverse);
+    --text-primary: var(--text-primary-inverse);
+    --text-secondary: var(--text-secondary-inverse);
+    --border: var(--border-inverse);
+
     position: relative;
-    overflow: hidden;
     padding-block: var(--space-2xl);
     background-color: var(--bg-primary);
+    color-scheme: dark;
   }
 
-  /* Modo overlay — sección transparente, flota sobre el fondo compartido de ContactReveal.astro.
-     Todo el texto en claro (var(--text-primary-inverse)) para máximo contraste sobre la foto,
-     con sombra de texto como respaldo (mismo criterio que el Hero). */
-  .contact.is-overlay { background: none; }
-  .contact.is-overlay .contact__eyebrow,
-  .contact.is-overlay .contact__title,
-  .contact.is-overlay .contact__intro,
-  .contact.is-overlay .field label,
-  .contact.is-overlay .contact__success {
-    color: var(--text-primary-inverse);
-    text-shadow: 0 1px 16px rgba(0, 0, 0, 0.4);
-  }
-  .contact.is-overlay .field input,
-  .contact.is-overlay .field select,
-  .contact.is-overlay .field textarea {
-    color: var(--text-primary-inverse);
-    border-bottom-color: color-mix(in srgb, var(--text-primary-inverse) 35%, transparent);
-  }
-  .contact.is-overlay .field input:focus,
-  .contact.is-overlay .field select:focus,
-  .contact.is-overlay .field textarea:focus {
-    border-bottom-color: var(--text-primary-inverse);
-  }
-  .contact.is-overlay .field select option {
-    background-color: var(--bg-primary-inverse);
-    color: var(--text-primary-inverse);
-  }
-  .contact.is-overlay .contact__submit {
-    background-color: var(--text-primary-inverse);
-    color: var(--bg-primary-inverse);
-  }
-  .contact.is-overlay .contact__submit:hover {
-    background-color: var(--text-secondary-inverse);
-  }
-
-  .contact__glow {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background:
-      radial-gradient(50% 60% at 80% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 65%),
-      radial-gradient(45% 50% at 0% 100%, color-mix(in srgb, var(--bg-secondary) 90%, var(--accent)), transparent 70%);
-  }
-
-  .contact__inner {
-    position: relative;
-    z-index: 1;
+  .contact__card {
+    max-width: 1200px;
+    margin-inline: auto;
+    /* Mismo verde de marca que el Preloader (pedido explicito) -- token compartido, no
+       un color nuevo inventado para esta tarjeta. */
+    background-color: var(--brand-green);
+    border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
     display: grid;
     gap: var(--space-lg);
   }
 
-  .contact__sticky {
-    align-self: start;
-  }
-
-  .contact__eyebrow {
-    display: block;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    letter-spacing: 0.14em;
-    color: var(--accent);
-    margin-bottom: var(--space-xs);
+  .contact__info {
+    display: flex;
+    flex-direction: column;
   }
 
   .contact__title {
     font-family: var(--font-heading);
+    /* Token fijo (60px) -- nunca clamp()/vw, la escala de H1/H2/H3 en este proyecto es
+       siempre fija. */
     font-size: var(--text-h2);
-    line-height: 1;
+    line-height: 1.1;
     letter-spacing: -0.02em;
     color: var(--text-primary);
     display: flex;
@@ -212,14 +192,39 @@ const t = locale === 'en'
   .contact__intro {
     margin-top: var(--space-md);
     font-family: var(--font-body);
-    font-size: var(--text-lg);
-    color: var(--text-secondary);
+    font-size: var(--text-base);
+    color: color-mix(in srgb, var(--text-primary) 70%, transparent);
     line-height: 1.6;
-    max-width: 40ch;
+    max-width: 38ch;
+  }
+
+  .contact__meta {
+    margin-top: auto;
+    padding-top: var(--space-lg);
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-sm);
+  }
+  .contact__meta-label {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--text-primary) 50%, transparent);
+  }
+  .contact__meta-value {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: color-mix(in srgb, var(--text-primary) 80%, transparent);
   }
 
   .contact__form {
-    display: grid;
+    /* flex, no grid: en grid con align-content:start el espacio sobrante queda FUERA
+       del ultimo track, y el margin-top:auto de .contact__submit-row no tenia espacio
+       real para empujar contra -- en flex (mismo mecanismo que .contact__info) si
+       funciona, empuja la fila hasta el fondo de la columna. */
+    display: flex;
+    flex-direction: column;
     gap: var(--space-md);
   }
 
@@ -231,9 +236,9 @@ const t = locale === 'en'
   .field label {
     font-family: var(--font-body);
     font-size: var(--text-xs);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: var(--text-secondary);
+    color: color-mix(in srgb, var(--text-primary) 60%, transparent);
   }
 
   .field input,
@@ -244,12 +249,25 @@ const t = locale === 'en'
     color: var(--text-primary);
     background: transparent;
     border: none;
-    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--text-primary) 30%, transparent);
     padding-block: var(--space-xs);
     outline: none;
     transition: border-color var(--transition-fast);
   }
 
+  /* Select "de papel": sin flecha nativa del navegador, con una propia muy sutil
+     (currentColor, no un hex fijo) para no perder la afordancia de que es un dropdown. */
+  .field select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    color: var(--text-primary);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='currentColor' stroke-width='1.3'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right center;
+    padding-right: var(--space-md);
+  }
   .field select option {
     background-color: var(--bg-secondary);
     color: var(--text-primary);
@@ -258,49 +276,90 @@ const t = locale === 'en'
   .field input:focus,
   .field select:focus,
   .field textarea:focus {
-    border-color: var(--accent);
+    border-color: var(--text-primary);
   }
 
   .field textarea { resize: vertical; }
 
+  .contact__submit-row {
+    /* auto, no un valor fijo: empuja la fila al fondo de la columna (mismo mecanismo
+       que .contact__meta en la columna izquierda) para que ambas queden a la misma
+       altura -- pedido explicito. */
+    margin-top: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-sm);
+  }
+
+  /* El "boton" es tipografia pura -- sin fondo, sin border-radius, alineado a la
+     izquierda (pedido explicito, reemplaza el boton blanco redondeado de antes). */
   .contact__submit {
-    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
     font-family: var(--font-body);
     font-weight: 600;
-    font-size: var(--text-base);
-    letter-spacing: 0.03em;
-    color: var(--bg-primary);
-    background-color: var(--accent);
+    font-size: var(--text-sm);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    background: none;
     border: none;
-    padding: var(--space-sm) var(--space-xl);
-    border-radius: var(--radius-full);
+    padding: 0;
     cursor: pointer;
-    transition: background-color var(--transition-fast);
   }
-  .contact__submit:hover { background-color: var(--accent-hover); }
-  .contact__submit:disabled { opacity: 0.7; cursor: default; }
+  .contact__submit-arrow {
+    transition: transform var(--transition-fast);
+  }
+  .contact__submit:hover .contact__submit-arrow {
+    transform: translateX(4px);
+  }
+  .contact__submit:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+  .contact__submit:disabled .contact__submit-arrow {
+    transform: none;
+  }
+
+  .contact__reply-note {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    color: color-mix(in srgb, var(--text-primary) 55%, transparent);
+  }
 
   .contact__success {
+    /* margin-top negativo == al gap del flex mientras esta oculto: sin esto, el gap
+       del contenedor entre .contact__submit-row y este parrafo se sigue reservando
+       aunque tenga height:0, y ese hueco invisible es lo que le restaba al
+       margin-top:auto de .contact__submit-row para llegar realmente al fondo de la
+       columna. Al hacerse visible, el gap real vuelve a aplicar (margin-top:0). */
+    margin-top: calc(var(--space-md) * -1);
     font-family: var(--font-body);
     font-size: var(--text-sm);
-    color: var(--accent);
+    color: var(--text-primary);
     opacity: 0;
     height: 0;
     overflow: hidden;
   }
   .contact__success.is-visible {
+    margin-top: 0;
     opacity: 1;
     height: auto;
   }
 
   @media (min-width: 768px) {
-    .contact__inner {
-      grid-template-columns: 1fr 1.2fr;
-      gap: var(--space-2xl);
+    .contact__card {
+      grid-template-columns: 1fr 1fr;
+      padding: var(--space-lg) var(--space-xl);
     }
-    .contact__sticky {
-      position: sticky;
-      top: calc(var(--space-2xl) + 4rem);
+  }
+
+  @media (max-width: 640px) {
+    .contact__card {
+      padding: var(--space-md);
     }
   }
 </style>

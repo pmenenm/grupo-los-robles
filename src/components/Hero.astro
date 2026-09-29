@@ -138,7 +138,10 @@ const {
     position: relative;
     min-height: 100svh;
     display: flex;
-    align-items: flex-end;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     overflow: hidden;
     color-scheme: dark;
   }
@@ -181,22 +184,27 @@ const {
   .hero__inner {
     position: relative;
     z-index: 1;
-    padding-top: var(--space-lg);
-    padding-bottom: var(--space-lg);
   }
 
   .hero__eyebrow {
     font-family: var(--font-body);
-    font-size: var(--text-xs);
-    letter-spacing: 0.15em;
+    /* 10px base, sube a --text-xs (12px) desde 768px -- mas delicado para contrastar
+       con el serif gigante del titulo (pedido explicito). */
+    font-size: 10px;
+    /* Tracking extremo (0.3em, el doble que antes): "vital para la elegancia". */
+    letter-spacing: 0.3em;
     text-transform: uppercase;
-    /* 70% -- pedido explicito ("baja su opacidad"): via color-mix sobre el token del
-       tema, nunca un rgba(255,255,255,...) hardcodeado. */
-    color: color-mix(in srgb, var(--text-primary-inverse) 70%, transparent);
+    /* 80% -- via color-mix sobre el token del tema, nunca un rgba(255,255,255,...)
+       hardcodeado. */
+    color: color-mix(in srgb, var(--text-primary-inverse) 80%, transparent);
     margin-bottom: 1.5rem;
     text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4);
     opacity: 1;
     transition: opacity var(--transition-smooth);
+  }
+
+  @media (min-width: 768px) {
+    .hero__eyebrow { font-size: var(--text-xs); }
   }
   .hero__eyebrow.is-hidden-by-logo {
     opacity: 0;
@@ -204,19 +212,38 @@ const {
 
   .hero__headline {
     font-family: var(--font-heading);
-    /* Token fijo (72px), no clamp()/vw -- la escala tipografica de H1/H2/H3 en este
-       proyecto es siempre fija, nunca fluida (regla del Ingeniero). */
-    font-size: var(--text-display);
-    font-weight: 500;
-    line-height: 1.1;
-    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    /* Tamaño "poster de cine" por breakpoints con valores FIJOS (34/50/67px mas abajo,
+       -30% sobre los 48/72/96px originales -- pedido explicito), nunca clamp()/vw -- la
+       escala tipografica de H1/H2/H3 en este proyecto es siempre fija, nunca fluida
+       (regla del Ingeniero). No se toca el token compartido --text-display (tambien lo
+       usa CTA.astro) para no afectar esa otra seccion de paso. */
+    font-size: 34px;
+    /* Mas liviano (pedido explicito, "nunca bold/semi-bold en este estilo") -- 400, no
+       500. Sigue siendo un peso real cargado via Google Fonts (ver pages/index.astro),
+       nunca font-weight:700+ (regla dura del proyecto, maximo 600 en todo el sitio). */
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
     color: var(--text-primary-inverse);
     text-wrap: balance;
-    /* Ancho suficiente para que "Un mismo estándar de excelencia." entre en una sola
-       linea (el <br/> del copy ya fuerza exactamente 2 lineas) -- con 18ch volvia a
-       partirse en 3, empujando el texto hasta pisar la linea divisoria de abajo. */
-    max-width: 34ch;
+    /* Ancho tipo "poster" (~max-w-4xl) para que el titulo rompa en las 2 lineas ya
+       fijadas por el <br/> del copy de forma equilibrada, centrado con margin-inline:
+       auto (text-align:center del padre solo centra contenido inline, no el propio
+       bloque del h1). */
+    /* 1200px, no 900 (~max-w-4xl): a 96px de fuente, "UN MISMO ESTÁNDAR" solo no entraba
+       en una linea a 900px y se partia en 4 lineas en vez de las 3 pedidas -- ajustado
+       viendo el render real, no solo calculado. */
+    max-width: 1200px;
+    margin-inline: auto;
     text-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  @media (min-width: 768px) {
+    .hero__headline { font-size: 50px; }
+  }
+  @media (min-width: 1024px) {
+    .hero__headline { font-size: 67px; }
   }
 
   .hero__scrollcue {
@@ -246,10 +273,9 @@ const {
     position: absolute;
     left: 0;
     right: 0;
-    /* Mas abajo que antes (90px): con el titulo en 2 lineas mas anchas, esa distancia
-       no alcanzaba y la linea quedaba atravesando "de excelencia." -- verificado con
-       captura, no solo calculado. */
-    bottom: 48px;
+    /* Ya no tiene que esquivar el H1 (ahora centrado, lejos del borde inferior) --
+       vuelve a ser un simple acento de borde. */
+    bottom: 32px;
     z-index: 1;
     width: 100%;
     border-bottom: 1px solid color-mix(in srgb, var(--text-primary-inverse) 20%, transparent);
@@ -259,9 +285,10 @@ const {
   .hero__slider-controls {
     position: absolute;
     z-index: 1;
-    /* Mismo valor que el padding-bottom de .hero__inner: alinea el borde inferior de
-       los botones con el borde inferior del H1 (pedido explicito). */
-    bottom: var(--space-lg);
+    /* El H1 ya no esta cerca del borde inferior (ahora centrado en la pantalla) --
+       los controles vuelven a vivir en su propia esquina, independientes del texto.
+       20% mas arriba que el token base (pedido explicito). */
+    bottom: calc(var(--space-md) * 1.2);
     right: var(--space-md);
     display: flex;
     gap: var(--space-xs);
@@ -292,8 +319,8 @@ const {
 
   @media (max-width: 640px) {
     .hero__scrollcue { display: none; }
-    .hero__divider { bottom: 36px; }
-    .hero__slider-controls { bottom: var(--space-sm); right: var(--space-sm); }
+    .hero__divider { bottom: 32px; }
+    .hero__slider-controls { bottom: calc(var(--space-sm) * 1.2); right: var(--space-sm); }
 
     /* Espacio para LogoIntro.astro: en mobile el contenido del Hero (centrado
        verticalmente) puede desbordar y su eyebrow queda pegado bajo el logo fijo de
