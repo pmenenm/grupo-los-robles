@@ -31,6 +31,13 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  /* Header.astro es fixed (~66-70px medido) y se superpone a cualquier seccion a la que
+     se navegue por ancla (#divisiones, #contacto, etc. desde SideNav.astro) -- sin esto,
+     el encabezado de la seccion queda tapado. scroll-padding-top en la raiz cubre TODOS
+     los anchors del sitio de una sola vez (no hace falta scroll-margin-top por seccion),
+     y es respetado tanto por saltos nativos como por cualquier scroll programatico
+     (incluido Lenis, que scrollea el documento nativo en este proyecto, sin wrapper). */
+  scroll-padding-top: 100px;
 }
 
 /* ─── CONTRATO: Variables que la Fábrica manipula ─────────── */

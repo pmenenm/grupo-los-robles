@@ -1,0 +1,262 @@
+---
+// src/components/Stats.astro
+// "Nuestro Alcance" -- layout asimetrico 2 columnas (texto editorial a la izquierda,
+// grilla 2x2 de cifras a la derecha, pedido explicito de refinamiento Quiet Luxury).
+// Sin iconos: la carga visual depende solo de tipografia + espacio en blanco.
+//
+// stats: [{ value: number, label: string, suffix?: string, decimals?: number }]
+// IMPORTANTE (CLAUDE.md §7.2 -- no inventar contenido): este componente NO trae cifras
+// por defecto. "Nuestro Alcance" esta documentado como dato pendiente/bloqueante del
+// cliente (ver docs/arquitectura-informacion.md, "Contenido pendiente del cliente") --
+// quien lo use en una pagina debe pasar valores reales via el prop `stats`.
+const {
+  eyebrow = 'impacto',
+  // Pedido explicito del Ingeniero Lider: reemplaza el parrafo corporativo real (cifras
+  // y hechos de "Nuestro Alcance" en si NO se tocan, siguen viniendo 100% del prop
+  // `stats`) por una linea editorial corta, a proposito -- esto es copywriting/direccion
+  // de arte, no un dato de negocio inventado (CLAUDE.md §7.2 aplica a hechos/cifras).
+  intro = 'Dos décadas forjando excelencia. Transformamos visión en valor tangible a través de cinco industrias clave.',
+  stats = [],
+} = Astro.props;
+---
+
+<section class="stats" data-gsap-section="stats">
+  <div class="container stats__inner">
+    <div class="stats__text" data-stats-head>
+      <span class="stats__eyebrow">( {eyebrow} )</span>
+      <p class="stats__intro">{intro}</p>
+    </div>
+
+    <div class="stats__grid">
+      {stats.map((stat) => (
+        <div class="stats__cell">
+          <p class="stats__value">
+            <span
+              class="stats__count"
+              data-count-to={stat.value}
+              data-count-decimals={stat.decimals ?? 0}
+            >0</span>
+            {stat.suffix && <span class="stats__suffix">{stat.suffix}</span>}
+          </p>
+          <p class="stats__label">{stat.label}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  function initStats() {
+    const section = document.querySelector('[data-gsap-section="stats"]');
+    if (!section) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const head = section.querySelector('[data-stats-head]');
+    const cells = section.querySelectorAll('.stats__cell');
+    const counters = section.querySelectorAll('[data-count-to]');
+    // Separador de miles segun idioma de la pagina ("3.500" en es-CL vs "3,500" en
+    // en-US) -- document.documentElement.lang ya lo fija Layout.astro via el prop
+    // `locale`, no hace falta un prop nuevo en este componente.
+    const numberLocale = document.documentElement.lang === 'en' ? 'en-US' : 'es-CL';
+
+    // Sin motion: el CSS base ya deja todo visible, solo se fija el valor final del
+    // conteo (nunca dejar los contadores clavados en "0" para quien pidio reduced-motion).
+    if (reduced) {
+      counters.forEach((el) => {
+        const target = parseFloat(el.getAttribute('data-count-to') || '0');
+        const decimals = parseInt(el.getAttribute('data-count-decimals') || '0', 10);
+        el.textContent = target.toLocaleString(numberLocale, {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals,
+        });
+      });
+      return;
+    }
+
+    gsap.set([head, ...cells], { y: 20, opacity: 0 });
+
+    ScrollTrigger.create({
+      trigger: section,
+      start: 'top 75%',
+      once: true,
+      onEnter: () => {
+        gsap.to(head, { y: 0, opacity: 1, duration: 1, ease: 'power2.out' });
+        // Stagger 0.2 (pedido explicito, antes 0.1): "uno tras otro en un barrido
+        // suave", no todos a la vez.
+        gsap.to(cells, { y: 0, opacity: 1, duration: 1, ease: 'power2.out', stagger: 0.2, delay: 0.1 });
+
+        counters.forEach((el, i) => {
+          const target = parseFloat(el.getAttribute('data-count-to') || '0');
+          const decimals = parseInt(el.getAttribute('data-count-decimals') || '0', 10);
+          const proxy = { v: 0 };
+          // Deliberado y pesado (pedido explicito), no un conteo frenetico -- 2.2s con
+          // power2.out. Delay escalonado (mismo 0.2 que el fade de arriba) para que el
+          // conteo tambien barra en secuencia, no arranque igual en las 4 celdas.
+          gsap.to(proxy, {
+            v: target,
+            duration: 2.2,
+            ease: 'power2.out',
+            delay: i * 0.2,
+            onUpdate: () => {
+              el.textContent = proxy.v.toLocaleString(numberLocale, {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals,
+              });
+            },
+          });
+        });
+      },
+    });
+  }
+
+  document.addEventListener('astro:page-load', initStats);
+</script>
+
+<style>
+  .stats {
+    --bg-primary: var(--bg-primary-inverse);
+    --text-primary: var(--text-primary-inverse);
+    --border: var(--border-inverse);
+
+    position: relative;
+    padding-top: var(--space-2xl);
+    /* Espacio extra al final (pedido explicito): la seccion clara de abajo se monta
+       encima con margin-top negativo + esquinas redondeadas ("superposicion editorial")
+       -- este padding evita que ese solape tape los numeros. */
+    padding-bottom: 10rem;
+    background-color: var(--bg-primary);
+    color-scheme: dark;
+  }
+
+  @media (min-width: 768px) {
+    .stats { padding-bottom: 14rem; }
+  }
+
+  .stats__inner {
+    max-width: var(--container-max);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+
+  .stats__eyebrow {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--text-primary) 50%, transparent);
+    margin-bottom: var(--space-lg);
+  }
+
+  .stats__intro {
+    /* Bloque compacto y tenso (pedido explicito): interlineado cerrado (1.15, no el
+       1.625 "relajado" de antes), mas chico y mas transparente (60%) para que retroceda
+       y les de todo el protagonismo a los numeros. Tamano fijo por breakpoint (20/24px,
+       nunca clamp()/vw, regla dura del proyecto) -- ya no sube a 30px en desktop grande. */
+    font-family: var(--font-heading);
+    font-weight: 300;
+    font-size: 20px;
+    line-height: 1.15;
+    color: color-mix(in srgb, var(--text-primary) 60%, transparent);
+    max-width: 28rem;
+    text-wrap: balance;
+  }
+
+  @media (min-width: 768px) {
+    .stats__intro { font-size: 24px; }
+  }
+
+  .stats__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    row-gap: var(--space-lg);
+  }
+
+  .stats__cell {
+    /* De vuelta a un borde superior (pedido explicito, revierte el "sin bordes" de la
+       iteracion anterior): "aspecto de reporte financiero de ultra lujo", con mucho
+       respiro arriba y abajo de cada celda. */
+    border-top: 1px solid color-mix(in srgb, var(--border) 15%, transparent);
+    padding-top: var(--space-md);
+    padding-bottom: calc(var(--space-md) * 1.5);
+  }
+
+  .stats__value {
+    display: flex;
+    align-items: flex-start;
+    font-family: var(--font-heading);
+    font-weight: 300;
+    /* Los numeros son el punto focal absoluto (pedido explicito) -- 46.8px base, salta a
+       83.2px en desktop grande (-35% pedido explicito sobre 72px/128px). Tamano fijo
+       por breakpoint, nunca clamp()/vw. */
+    font-size: 46.8px;
+    line-height: 1;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (min-width: 1024px) {
+    .stats__value { font-size: 83.2px; }
+  }
+
+  .stats__suffix {
+    /* Serif liviano (pedido explicito, antes sans-serif) -- misma familia que el
+       numero, para que se sienta tipograficamente emparentado en vez de un caracter
+       ajeno pegado al lado. */
+    font-family: var(--font-heading);
+    /* 19.5px/31.2px (-35%, igual proporcion que .stats__value): al bajar el numero un
+       35% sin tocar el "+" este quedaba casi del mismo tamano que numeros cortos como
+       "5"/"40", rompiendo la jerarquia de "nunca al mismo tamano del numero". */
+    font-size: 19.5px;
+    font-weight: 300;
+    margin-top: 0.5rem;
+    margin-left: 0.5rem;
+    color: color-mix(in srgb, var(--text-primary) 40%, transparent);
+  }
+
+  @media (min-width: 1024px) {
+    .stats__suffix { font-size: 31.2px; }
+  }
+
+  .stats__label {
+    /* mt-10 (2.5rem), no --space-sm (1rem): los numeros con cifras "old-style" (3 y 5)
+       caen bajo la linea base -- pedido explicito de empujar la etiqueta mas abajo para
+       compensar. */
+    margin-top: 2.5rem;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: color-mix(in srgb, var(--text-primary) 40%, transparent);
+  }
+
+  @media (min-width: 768px) {
+    .stats__label { font-size: 10px; }
+
+    .stats__grid {
+      grid-template-columns: repeat(2, 1fr);
+      row-gap: var(--space-lg);
+      column-gap: calc(var(--space-md) * 1.5);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .stats__inner {
+      grid-template-columns: 5fr 7fr;
+      /* center, no start (pedido explicito): el texto queda centrado verticalmente
+         respecto al alto total de la grilla de numeros, no pegado arriba. */
+      align-items: center;
+      gap: var(--space-lg) var(--space-xl);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .stats__value { font-size: 36.4px; }
+  }
+</style>

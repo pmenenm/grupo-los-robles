@@ -1,25 +1,17 @@
 ---
 // src/components/LogoIntro.astro
-// Momento de entrada inspirado en grupoparaguas.com/#historia (referencia del cliente,
-// Andrés Belfus): el wordmark aparece grande y centrado arriba, flotando sobre el Hero
-// sin fondo, con el selector de idioma a la derecha. Al primer scroll (mismo umbral que
-// Header.astro, 40px) se desvanece y el Header compacto (logo chico a la izquierda) toma
-// su lugar — dos elementos independientes que cruzan opacidad, no una fusión de ambos.
-import siteEs from '../../contracts/site.json';
-import siteEn from '../../contracts/site.en.json';
-
+// Selector de idioma flotante sobre el Hero (momento oscuro), visible antes del primer
+// scroll. El wordmark grande que vivía acá se movió a Hero.astro (pedido explicito:
+// "que quede cerca del titulo h1") -- este componente ahora solo resuelve el switch de
+// idioma en esa franja superior; al primer scroll (mismo umbral que Header.astro, 40px)
+// se desvanece y el Header compacto (logo chico + idioma + menu) toma su lugar.
 const { locale = 'es' } = Astro.props;
-const site = locale === 'en' ? siteEn : siteEs;
-const { siteName } = site.site;
 
 const altHref = locale === 'en' ? '.' : 'en/';
 const altLabel = locale === 'en' ? 'ES' : 'EN';
 ---
 
 <div class="logo-intro" data-logo-intro>
-  <a href={locale === 'en' ? 'en/#inicio' : '#inicio'} class="logo-intro__logo" aria-label={`${siteName}, ${locale === 'en' ? 'Home' : 'Inicio'}`}>
-    <img src="images/LOGO-LOSrOBLES-BLANCO.webp" alt={siteName} />
-  </a>
   <a href={altHref} class="logo-intro__lang" aria-label={`${locale === 'en' ? 'Switch to Spanish' : 'Cambiar a inglés'}`}>{altLabel}</a>
 </div>
 
@@ -63,14 +55,6 @@ const altLabel = locale === 'en' ? 'ES' : 'EN';
     pointer-events: none;
   }
 
-  .logo-intro__logo {
-    display: inline-flex;
-  }
-  .logo-intro__logo img {
-    height: clamp(2.5rem, 6vw, 4.5rem);
-    width: auto;
-  }
-
   .logo-intro__lang {
     position: absolute;
     right: var(--space-md);
@@ -91,9 +75,6 @@ const altLabel = locale === 'en' ? 'ES' : 'EN';
   @media (max-width: 640px) {
     .logo-intro {
       padding-block: var(--space-sm);
-    }
-    .logo-intro__logo img {
-      height: clamp(2rem, 8vw, 2.5rem);
     }
   }
 

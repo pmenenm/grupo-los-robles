@@ -5,7 +5,6 @@
 // la galería pinneada anterior, especialmente para las divisiones con más información
 // (Vestuario, Inmobiliaria). Lenis sigue dando el smooth-scroll global de la página.
 const {
-  eyebrow = '02',
   label = 'Nuestras Divisiones',
   // [{ id, number, name, description, image, alt, ctaLabel, ctaHref, featured?: boolean,
   //    brands?: [{ name, locations: [], note? }], projects?: string[], gallery?: string[] }]
@@ -13,9 +12,8 @@ const {
 } = Astro.props;
 ---
 
-<section id="divisiones" class="industries" data-gsap-section="industries">
+<section id="divisiones" class="industries" data-gsap-section="industries" data-header-theme="light">
   <div class="industries__label container">
-    <span class="industries__eyebrow">{eyebrow}</span>
     <h2 class="industries__heading">{label}</h2>
   </div>
 
@@ -135,21 +133,30 @@ const {
 
 <style>
   .industries {
+    /* "Superposicion editorial" (pedido explicito): esta seccion clara se monta sobre
+       el fondo oscuro de Stats.astro con margin-top negativo + esquinas superiores
+       redondeadas, rompiendo el corte recto entre ambas. z-10 la deja por encima del
+       borde inferior (recto) de Stats. padding-top compensa el margen negativo para que
+       el titulo no quede pegado a la curva. */
+    position: relative;
+    z-index: 10;
     background-color: var(--bg-primary);
-    padding-block: var(--space-xl);
+    margin-top: -5rem;
+    border-radius: 2.5rem 2.5rem 0 0;
+    padding-top: var(--space-xl);
+    padding-bottom: var(--space-xl);
+  }
+
+  @media (min-width: 768px) {
+    .industries {
+      margin-top: -8rem;
+      border-radius: 4rem 4rem 0 0;
+      padding-top: 12rem;
+    }
   }
 
   .industries__label {
     margin-bottom: var(--space-xl);
-  }
-
-  .industries__eyebrow {
-    display: block;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    letter-spacing: 0.14em;
-    color: var(--accent);
-    margin-bottom: var(--space-xs);
   }
 
   .industries__heading {

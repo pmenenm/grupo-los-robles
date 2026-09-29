@@ -1,30 +1,17 @@
 ---
 // src/components/Footer.astro
 // Chrome global del sitio. Lee contracts/site*.json (marca + contacto + links) según `locale`.
-// Rediseño: fondo verde de marca (mismo --brand-green del Preloader) + texto café/marrón
+// Fondo verde de marca (mismo --brand-green del Preloader) + texto café/marrón
 // (--text-secondary-inverse, la misma variable "cálida sobre oscuro" que ya usan
-// ManifestoSection/ContactReveal) + wordmark gigante con máscara de imagen (background-clip:
-// text) usando exactamente la misma composición de 5 fotos que ContactReveal.astro.
+// ManifestoSection/ContactReveal). El wordmark gigante ya NO usa mascara de imagen
+// (background-clip:text) -- pedido explicito: "marca de agua monumental pero delicada",
+// serif liviano a muy baja opacidad sobre el fondo, sin foto ni efecto detras.
 import siteEs from '../../contracts/site.json';
 import siteEn from '../../contracts/site.en.json';
 
 const { locale = 'es' } = Astro.props;
 const site = locale === 'en' ? siteEn : siteEs;
 
-// background-image inline (no en el <style> scoped): Astro extrae los <style> a un CSS
-// externo en produccion, y un url() ahi se resuelve relativo al archivo CSS (su propia
-// carpeta /_astro/), NO al <base> del documento -- rompia bajo el subpath de preview de
-// GitHub Pages. Como atributo style="" inline, el navegador SI lo resuelve respetando
-// el <base> del documento (BaseHead.astro), igual que cualquier otro src/href relativo.
-const base = import.meta.env.BASE_URL;
-const giantBg = [
-  'linear-gradient(180deg, color-mix(in srgb, var(--bg-primary-inverse) 55%, transparent) 0%, color-mix(in srgb, var(--bg-primary-inverse) 72%, transparent) 50%, color-mix(in srgb, var(--bg-primary-inverse) 88%, transparent) 100%)',
-  `url(${base}images/lujo-silencioso/division-gastronomia.jpg)`,
-  `url(${base}images/lujo-silencioso/division-vestuario.jpg)`,
-  `url(${base}images/lujo-silencioso/division-agricola.jpg)`,
-  `url(${base}images/lujo-silencioso/division-tecnologica.jpg)`,
-  `url(${base}images/lujo-silencioso/division-inmobiliario.jpg)`,
-].join(', ');
 const t = locale === 'en'
   ? {
       talk: "Let's talk →", nav: 'Navigation', navLabel: 'Footer navigation', contact: 'Contact',
@@ -85,7 +72,7 @@ const hasContactInfo = company.email || company.phone || company.address;
     </div>
   </div>
 
-  <p class="site-footer__giant" aria-hidden="true" style={`background-image: ${giantBg}`}>{siteName.toUpperCase()}</p>
+  <p class="site-footer__giant" aria-hidden="true">{siteName.toUpperCase()}</p>
 
   <div class="container site-footer__bottom">
     <p>&copy; {year} {company.legalName ?? siteName}. {t.rights}</p>
@@ -115,7 +102,13 @@ const hasContactInfo = company.email || company.phone || company.address;
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--space-lg);
+    /* "Rigor arquitectonico" (pedido explicito): borde inferior fino + mas aire antes
+       de la marca de agua, en vez de sentirse flotando. */
     padding-bottom: var(--space-lg);
+    /* Blanco (--text-primary-inverse), no --border-inverse: ese token esta calibrado
+       para el negro casi puro de Manifesto/Contacto, no para el verde de marca de este
+       footer -- ahi quedaba casi invisible. */
+    border-bottom: 1px solid color-mix(in srgb, var(--text-primary-inverse) 10%, transparent);
   }
 
   .site-footer__logo {
@@ -123,11 +116,17 @@ const hasContactInfo = company.email || company.phone || company.address;
     width: auto;
   }
   .site-footer__tagline {
-    font-family: var(--font-body);
-    font-size: var(--text-base);
-    color: var(--text-secondary);
+    /* Serif editorial (pedido explicito), no la sans-serif de UI que tenia antes. */
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    line-height: 1.625;
+    color: color-mix(in srgb, var(--text-primary) 70%, transparent);
     margin-block: var(--space-sm);
-    max-width: 36ch;
+    max-width: 24rem;
+  }
+
+  @media (min-width: 768px) {
+    .site-footer__tagline { font-size: var(--text-xl); }
   }
   .site-footer__cta {
     position: relative;
@@ -183,114 +182,83 @@ const hasContactInfo = company.email || company.phone || company.address;
   }
   .site-footer__col h3 {
     font-family: var(--font-body);
-    font-size: var(--text-xs);
-    letter-spacing: 0.12em;
+    font-size: 10px;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: var(--space-sm);
+    color: color-mix(in srgb, var(--text-primary) 40%, transparent);
+    margin-bottom: var(--space-md);
   }
-  .site-footer__col ul { list-style: none; display: grid; gap: var(--space-xs); }
+  .site-footer__col ul { list-style: none; display: grid; gap: 0; }
   .site-footer__col a,
   .site-footer__col span {
-    position: relative;
-    display: inline-block;
+    display: block;
     width: fit-content;
     font-family: var(--font-body);
     font-size: var(--text-sm);
-    color: var(--text-secondary);
+    color: color-mix(in srgb, var(--text-primary) 80%, transparent);
     text-decoration: none;
+    margin-bottom: var(--space-xs);
     transition: color var(--transition-fast);
   }
-  .site-footer__col a::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    width: 100%;
-    height: 1px;
-    background-color: var(--text-primary);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform var(--transition-fast);
-  }
   .site-footer__col a:hover { color: var(--text-primary); }
-  .site-footer__col a:hover::after { transform: scaleX(1); }
 
   /* EXCEPCIÓN deliberada a la escala tipográfica fija del proyecto (theme.css: --text-display/
      --text-h2/--text-h3, siempre en px, nunca clamp/vw): este wordmark es un billboard de
-     una sola línea que debe caber en el ancho del viewport a cualquier tamaño de pantalla,
-     así que necesita escalar con vw por diseño — no es un H1/H2/H3 real (es aria-hidden).
-     Wordmark gigante con máscara de imagen — misma composición de 5 fotos + velo oscuro
-     que ContactReveal.astro (.reveal__bg-imgs + .reveal__bg-overlay), ver ese componente
-     para el origen exacto de estos 5 archivos y del degradado. Capas de background
-     (la primera queda arriba): velo oscuro sobre las 5 fotos, cada una ocupando 1/5 del
-     ancho (background-size 20% 100% + background-position 0/25/50/75/100% = las 5 franjas
-     se tocan borde a borde, sin huecos ni superposición — ver nota más abajo). */
+     una sola línea que debe caber de borde a borde del viewport a cualquier tamaño de
+     pantalla, así que necesita escalar con vw por diseño -- no es un H1/H2/H3 real (es
+     aria-hidden). Marca de agua serif monumental pero delicada (pedido explicito) --
+     sin mascara de imagen, sin background-clip: solo tipografia a muy baja opacidad
+     sobre el verde de marca, "textura, no letrero de neon". */
   .site-footer__giant {
+    display: block;
+    width: 100%;
     margin: 0;
-    padding-inline: var(--space-xs);
-    /* PRUEBA: sans-serif (como el wordmark del logo) en vez de var(--font-heading).
-       Revertir a var(--font-heading) + font-weight: 500 si no convence. */
-    font-family: var(--font-body);
-    font-weight: 600;
+    overflow: hidden;
+    font-family: var(--font-heading);
+    font-weight: 300;
     text-transform: uppercase;
-    line-height: 0.82;
-    letter-spacing: -0.01em;
+    line-height: 0.8;
+    letter-spacing: -0.02em;
     text-align: center;
-    font-size: clamp(2.2rem, 9.7vw, 9.2rem);
-    white-space: nowrap;
-
-    /* background-image: ver el atributo style="" inline en el markup -- movido ahi por
-       como Astro extrae este <style> a un CSS externo (ver comentario junto a giantBg
-       en el frontmatter). */
-    background-repeat: no-repeat;
-    background-position:
-      0 0,
-      0% center,
-      25% center,
-      50% center,
-      75% center,
-      100% center;
-    background-size:
-      100% 100%,
-      20% 100%,
-      20% 100%,
-      20% 100%,
-      20% 100%,
-      20% 100%;
-
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
+    font-size: 11vw;
+    color: color-mix(in srgb, var(--text-primary-inverse) 10%, transparent);
+    user-select: none;
   }
 
-  /* Navegador sin soporte de background-clip:text: texto legible en el color café/marrón
-     del tema en vez de quedar invisible (color:transparent sin recorte real). */
-  @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  @media (min-width: 768px) {
     .site-footer__giant {
-      color: var(--text-secondary);
-      -webkit-text-fill-color: var(--text-secondary);
+      color: color-mix(in srgb, var(--text-primary-inverse) 15%, transparent);
     }
   }
 
   .site-footer__bottom {
-    padding-block: var(--space-md) var(--space-lg);
-    margin-top: var(--space-md);
-    border-top: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+    /* Ultra minimalista, justo debajo de la marca de agua (pedido explicito) -- sin
+       borde, el espacio negativo ya la separa. */
+    padding-block: var(--space-md) var(--space-sm);
+    text-align: center;
   }
   .site-footer__bottom p {
     font-family: var(--font-body);
-    font-size: var(--text-xs);
-    color: var(--text-secondary);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: color-mix(in srgb, var(--text-primary) 30%, transparent);
   }
 
   @media (min-width: 768px) {
     .site-footer__top {
-      grid-template-columns: 1.2fr 1fr;
+      /* Grilla de 12 columnas (pedido explicito): logo/bio en 1-4, nav+contacto
+         arrancando en la 6 -- el hueco en la 5 es el aire intencional entre bloques. */
+      grid-template-columns: repeat(12, 1fr);
       align-items: start;
-      gap: var(--space-2xl);
+      column-gap: var(--space-lg);
+      padding-bottom: var(--space-xl);
     }
-    .site-footer__cols { gap: var(--space-lg); }
+    .site-footer__brand { grid-column: 1 / span 4; }
+    .site-footer__cols {
+      grid-column: 6 / span 7;
+      grid-template-columns: 4fr 3fr;
+      gap: var(--space-lg);
+    }
   }
 </style>

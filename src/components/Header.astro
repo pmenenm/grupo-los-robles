@@ -17,8 +17,10 @@ const openLabel = locale === 'en' ? 'Open menu' : 'Abrir menú';
 <header class="site-header" data-header>
   <div class="container site-header__inner">
     <a href={locale === 'en' ? 'en/#inicio' : '#inicio'} class="logo" aria-label={`${siteName}, ${locale === 'en' ? 'Home' : 'Inicio'}`}>
+      <!-- Verde por defecto (header claro); el verde no se lee bien sobre la pill
+           oscura, asi que ahi vuelve a la variante blanca (ver .is-on-light abajo). -->
+      <img class="logo__img logo__img--color" src="images/logo-losRobles.webp" alt={siteName} />
       <img class="logo__img logo__img--light" src="images/LOGO-LOSrOBLES-BLANCO.webp" alt={siteName} />
-      <img class="logo__img logo__img--dark" src="images/logo-losRobles.webp" alt={siteName} />
     </a>
 
     <div class="site-header__actions">
@@ -56,6 +58,28 @@ const openLabel = locale === 'en' ? 'Open menu' : 'Abrir menú';
       onScroll();
       window.addEventListener('scroll', onScroll, { passive: true });
       cleanups.push(() => window.removeEventListener('scroll', onScroll));
+    }
+
+    // El header es blanco por defecto (la mayoria de las secciones del sitio son
+    // oscuras) y pasa a tinta oscura solo mientras lo que tiene detras es una seccion
+    // clara (hoy, unicamente IndustriesGallery.astro) -- pedido explicito: "blanco en
+    // fondos oscuros, oscuro en fondos blancos". Una franja de 1px pegada al borde
+    // inferior del header hace de "sensor": si una seccion marcada como clara la cruza,
+    // esa seccion es la que esta bajo el header en ese instante del scroll.
+    if (header) {
+      const lightSections = document.querySelectorAll<HTMLElement>('[data-header-theme="light"]');
+      if (lightSections.length) {
+        const headerHeight = header.offsetHeight || 72;
+        const themeObserver = new IntersectionObserver(
+          (entries) => {
+            const onLight = entries.some((entry) => entry.isIntersecting);
+            header.classList.toggle('is-on-light', onLight);
+          },
+          { rootMargin: `-${headerHeight}px 0px -${Math.max(window.innerHeight - headerHeight - 1, 0)}px 0px`, threshold: 0 }
+        );
+        lightSections.forEach((section) => themeObserver.observe(section));
+        cleanups.push(() => themeObserver.disconnect());
+      }
     }
 
     // El estado (abierto/cerrado) lo dueño lo tiene SideNav.astro; Header solo despacha el toggle
@@ -109,9 +133,19 @@ const openLabel = locale === 'en' ? 'Open menu' : 'Abrir menú';
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
-    background-color: color-mix(in srgb, var(--bg-primary) 78%, transparent);
+    /* Claro por defecto (pedido explicito) -- pill clara y translucida, se invierte a
+       oscura solo sobre una seccion de fondo claro (.is-on-light, ver mas abajo).
+       Blanco puro (no --bg-primary, el "blanco calido"/crema del tema) -- pedido
+       explicito: "blanco, con opacidad, pero blanco". Unica excepcion deliberada a la
+       regla de solo variables del tema en este proyecto. */
+    background-color: color-mix(in srgb, white 78%, transparent);
     backdrop-filter: blur(14px);
     border-bottom-color: color-mix(in srgb, var(--border) 40%, transparent);
+  }
+
+  .site-header.is-scrolled.is-on-light {
+    background-color: color-mix(in srgb, var(--bg-primary-inverse) 70%, transparent);
+    border-bottom-color: color-mix(in srgb, var(--border-inverse) 40%, transparent);
   }
 
   .site-header__inner {
@@ -123,8 +157,8 @@ const openLabel = locale === 'en' ? 'Open menu' : 'Abrir menú';
   }
 
   /* ── Logo ── */
-  /* Sin scroll el header flota transparente sobre el Hero (momento oscuro, §Hero) →
-     variante blanca. Al hacer scroll, fondo claro del tema → variante de color. */
+  /* Verde por defecto (header claro, pedido explicito); sobre header oscuro (pill
+     oscura, .is-on-light) el verde no se lee bien -- vuelve a la variante blanca ahi. */
   .logo {
     display: inline-flex;
     align-items: center;
@@ -134,9 +168,9 @@ const openLabel = locale === 'en' ? 'Open menu' : 'Abrir menú';
     height: clamp(1.75rem, 3vw, 2.25rem);
     width: auto;
   }
-  .logo__img--dark { display: none; }
-  .site-header.is-scrolled .logo__img--light { display: none; }
-  .site-header.is-scrolled .logo__img--dark { display: block; }
+  .logo__img--light { display: none; }
+  .site-header.is-on-light .logo__img--color { display: none; }
+  .site-header.is-on-light .logo__img--light { display: block; }
 
   /* ── Acciones (idioma + toggle) ── */
   .site-header__actions {
@@ -149,13 +183,14 @@ const openLabel = locale === 'en' ? 'Open menu' : 'Abrir menú';
     font-family: var(--font-body);
     font-size: var(--text-xs);
     letter-spacing: 0.1em;
-    color: #f2ece0;
+    color: var(--text-primary);
     text-decoration: none;
     opacity: 0.75;
     transition: opacity var(--transition-fast), color var(--transition-fast);
   }
   .lang-switch:hover { opacity: 1; }
-  .site-header.is-scrolled .lang-switch { color: var(--text-primary); }
+  /* Mismo blanco que el resto de la tipografia del tema, nunca un hex suelto. */
+  .site-header.is-on-light .lang-switch { color: var(--text-primary-inverse); }
 
   /* ── Toggle del menú lateral ── */
   /* Sin borde ni fondo: solo el ícono, elegante y suelto (pedido del Ingeniero) */
@@ -183,7 +218,7 @@ const openLabel = locale === 'en' ? 'Open menu' : 'Abrir menú';
     display: block;
     height: 1px;
     width: 100%;
-    background-color: #f2ece0;
+    background-color: var(--text-primary);
     transition: transform var(--transition-fast), opacity var(--transition-fast), background-color var(--transition-fast);
     transform-origin: center;
   }
@@ -191,8 +226,9 @@ const openLabel = locale === 'en' ? 'Open menu' : 'Abrir menú';
   .nav-toggle.is-active .nav-toggle__bars span:nth-child(2) { opacity: 0; }
   .nav-toggle.is-active .nav-toggle__bars span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
 
-  /* Al hacer scroll: fondo claro del tema global → invertir a tinta oscura */
-  .site-header.is-scrolled .nav-toggle__bars span {
-    background-color: var(--text-primary);
+  /* Sobre seccion clara: invertir a blanco (mismo token que el resto de la tipografia
+     del tema, nunca un hex suelto). */
+  .site-header.is-on-light .nav-toggle__bars span {
+    background-color: var(--text-primary-inverse);
   }
 </style>

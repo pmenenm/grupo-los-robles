@@ -151,7 +151,20 @@ const t = locale === 'en'
     --border: var(--border-inverse);
 
     position: relative;
-    padding-block: var(--space-2xl);
+    /* 100vh menos el scroll-padding-top global (theme.css, 100px): al navegar por ancla
+       el navegador deja la seccion empezando 100px mas abajo del tope del viewport --
+       con min-height:100vh completo eso empujaba el fondo de la tarjeta fuera de
+       pantalla en viewports bajos (bug real, verificado: se cortaba a 700px de alto).
+       Restando ese offset la seccion termina justo en el borde del viewport, sin overflow. */
+    min-height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* 6rem, no --space-2xl (12rem): con min-height + centrado vertical, el padding
+       exagerado de antes hacia que la tarjeta se recortara abajo en pantallas mas bajas
+       -- pedido explicito, "la tarjeta debe quedar en el centro absoluto, sin cortes". */
+    padding-block: calc(var(--space-lg) * 1.5);
     background-color: var(--bg-primary);
     color-scheme: dark;
   }

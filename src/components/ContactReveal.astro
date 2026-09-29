@@ -22,9 +22,7 @@ const {
 
   <div class="reveal__fg">
     <div class="reveal__cta" data-reveal-cta>
-      <p class="reveal__cta-eyebrow">{cta.eyebrow}</p>
       <h2 class="reveal__cta-heading">{cta.heading}</h2>
-      <a href={cta.ctaHref} class="reveal__cta-btn">{cta.ctaText}</a>
     </div>
   </div>
 </section>
@@ -102,14 +100,6 @@ const {
     text-align: center;
     padding: var(--space-lg);
   }
-  .reveal__cta-eyebrow {
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--text-secondary-inverse);
-    margin-bottom: var(--space-sm);
-  }
   .reveal__cta-heading {
     font-family: var(--font-heading);
     font-weight: 500;
@@ -118,24 +108,6 @@ const {
     max-width: 22ch;
     color: var(--text-primary-inverse);
     text-wrap: balance;
-    margin-bottom: var(--space-lg);
-  }
-  .reveal__cta-btn {
-    display: inline-block;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-primary-inverse);
-    text-decoration: none;
-    border: 1px solid color-mix(in srgb, var(--text-primary-inverse) 70%, transparent);
-    padding: var(--space-sm) var(--space-xl);
-    transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
-  }
-  .reveal__cta-btn:hover {
-    background-color: var(--text-primary-inverse);
-    color: var(--bg-primary-inverse);
-    border-color: var(--text-primary-inverse);
   }
 
   @media (prefers-reduced-motion: reduce) {

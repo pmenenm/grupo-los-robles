@@ -6,7 +6,6 @@ import ShaderField from './ShaderField.astro';
 import TerritoryMap from './TerritoryMap.astro';
 
 const {
-  eyebrow = '03',
   lines = [], // array de strings, cada uno se revela como su propia línea
   lineAsset = 'images/nosotros-linea.webp',
   verticalLabel = 'Grupo Los Robles',
@@ -23,7 +22,6 @@ const {
 
   <div class="container manifesto__inner">
     <div class="manifesto__stage" data-manifesto-stage>
-      <span class="manifesto__eyebrow">{eyebrow}</span>
       <p class="manifesto__text" data-manifesto-text>
         {lines.map((line, i) => (
           <>
@@ -205,14 +203,6 @@ const {
     }
   }
 
-  .manifesto__eyebrow {
-    display: block;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    letter-spacing: 0.14em;
-    color: var(--accent);
-    margin-bottom: var(--space-md);
-  }
 
   .manifesto__text {
     font-family: var(--font-heading);

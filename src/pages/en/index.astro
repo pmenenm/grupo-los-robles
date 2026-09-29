@@ -3,6 +3,7 @@
 // Mirror of src/pages/index.astro — same structure/data, English copy. Keep both in sync.
 import Layout from '../../layouts/Layout.astro';
 import Hero from '../../components/Hero.astro';
+import Stats from '../../components/Stats.astro';
 import IndustriesGallery from '../../components/IndustriesGallery.astro';
 import VideoReveal from '../../components/VideoReveal.astro';
 import ManifestoSection from '../../components/ManifestoSection.astro';
@@ -25,9 +26,24 @@ const _hero = {
   eyebrow: 'A Chilean holding that invests in, operates and grows leading brands.',
   headline: 'Five industries.<br/>One standard<br/>of excellence.',
   images: [
-    { src: 'images/lujo-silencioso/hero-interior.jpg', alt: 'Minimalist architectural interior' },
     { src: 'images/lujo-silencioso/hero-agricola.jpg', alt: 'Farmland at dusk' },
-    { src: 'images/lujo-silencioso/hero-vestuario.jpg', alt: 'Minimalist fashion boutique' },
+    { src: 'images/lujo-silencioso/hero-vestuario-hombre.jpg', alt: 'Man in a tailored suit in a minimalist interior, premium menswear' },
+    { src: 'images/lujo-silencioso/hero-inmobiliaria.jpg', alt: 'Aerial view of land plots for real estate development by the mountains' },
+  ],
+};
+
+// Real "Nuestro Alcance" figures -- same data as the ES page (provided by the Lead
+// Engineer), translated copy only.
+const _stats = {
+  // Short editorial line (explicit request, replaces the real corporate paragraph
+  // above) -- the figures below are still 100% real, this is copy only.
+  intro:
+    'Two decades forging excellence. We turn vision into tangible value across five key industries.',
+  stats: [
+    { value: 150, label: 'New branches', suffix: '+' },
+    { value: 5, label: 'Distinct sectors' },
+    { value: 3500, label: 'Employees', suffix: '+' },
+    { value: 40, label: 'Active brands', suffix: '+' },
   ],
 };
 
@@ -120,12 +136,16 @@ const _divisions = [
       'We manage and develop commercial and office projects, prioritizing locations with excellent connectivity and flow.',
     image: 'images/lujo-silencioso/division-inmobiliario.jpg',
     alt: 'Modern architectural facade at dusk',
-    projects: ['Los Robles Investments', 'Inmobiliaria Los Nogales', 'Inmobiliaria la Araucaria'],
+    projects: [
+      'Los Robles Investments',
+      'Inmobiliaria Los Nogales: Av. El Bosque (Daniel Hernández) N°307',
+      'Inmobiliaria la Araucaria: Centro Industrial El Belloto, Playa Madre',
+      'Neocisterna / Inversiones: Donde Gastón',
+    ],
   },
 ];
 
 const _manifesto = {
-  eyebrow: '02',
   lines: [
     'For us, excellence',
     'lies in simplicity.',
@@ -171,11 +191,13 @@ const _revealImages = [
     locale="en"
   />
 
-  <IndustriesGallery eyebrow="01" label="Our Divisions" divisions={_divisions} />
+  <Stats eyebrow="impact" intro={_stats.intro} stats={_stats.stats} />
+
+  <IndustriesGallery label="Our Divisions" divisions={_divisions} />
 
   <VideoReveal locale="en" />
 
-  <ManifestoSection eyebrow={_manifesto.eyebrow} lines={_manifesto.lines} locale="en" />
+  <ManifestoSection lines={_manifesto.lines} locale="en" />
 
   <ContactSection
     title={_contact.title}
