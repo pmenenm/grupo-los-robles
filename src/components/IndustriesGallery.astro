@@ -103,6 +103,67 @@ const {
     });
   }
 
+  // Snap mandatory (pedido explicito): cada <article> (division) atrae el scroll --
+  // si el usuario suelta el scroll en cualquier punto intermedio, el scroll termina de
+  // completarse solo hasta el borde superior del articulo mas cercano. Solo desktop
+  // (matchMedia): en mobile las filas suelen ser mas altas que un viewport (marquee de
+  // marcas, descripcion larga) y un snap obligatorio ahi "secuestraria" al usuario a
+  // mitad de lectura -- mismo criterio que ya aplica el proyecto a otros efectos de
+  // scroll pesados (CLAUDE.md 15.6.1).
+  let snapMM;
+  let snapResizeHandler;
+
+  function initIndustriesSnap() {
+    snapMM?.revert();
+    window.removeEventListener('resize', snapResizeHandler);
+    const list = document.querySelector('.industries__list');
+    const rows = gsap.utils.toArray('[data-industries-row]');
+    if (!list || !rows.length) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    snapMM = gsap.matchMedia();
+    snapMM.add('(min-width: 768px)', () => {
+      // Posicion de cada articulo como fraccion (0-1) del rango de scroll que cubre
+      // toda la lista -- centrado verticalmente en el viewport (pedido explicito: "justo
+      // en medio, no mas arriba ni mas abajo"), no con el borde superior pegado arriba.
+      const listTop = list.getBoundingClientRect().top + window.scrollY;
+      const rangePx = list.offsetHeight - window.innerHeight;
+      const viewportH = window.innerHeight;
+      const snapPoints = rows.map((row) => {
+        const rowRect = row.getBoundingClientRect();
+        const rowCenter = rowRect.top + window.scrollY + rowRect.height / 2;
+        const desiredScrollY = rowCenter - viewportH / 2;
+        return rangePx > 0 ? Math.min(Math.max((desiredScrollY - listTop) / rangePx, 0), 1) : 0;
+      });
+
+      const st = ScrollTrigger.create({
+        trigger: list,
+        start: 'top top',
+        end: 'bottom bottom',
+        snap: {
+          snapTo: snapPoints,
+          // Mas rapido (pedido explicito): antes tardaba 0.15s en reaccionar tras
+          // soltar el scroll y hasta 0.8s en completar el tiron -- ahora reacciona casi
+          // de inmediato y el tiron mismo es mucho mas corto.
+          duration: { min: 0.15, max: 0.4 },
+          delay: 0.03,
+          ease: 'power2.out',
+        },
+      });
+
+      return () => st.kill();
+    });
+
+    // Reconstruye los snapPoints en resize (ej. cambia el alto de una fila al
+    // reflowear el marquee de marcas) -- debounced para no recalcular en cada pixel.
+    let resizeTimer;
+    snapResizeHandler = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(initIndustriesSnap, 200);
+    };
+    window.addEventListener('resize', snapResizeHandler);
+  }
+
   function initBrandCarousels() {
     carouselTweens.forEach((t) => t.kill());
     carouselTweens = [];
@@ -127,8 +188,17 @@ const {
   document.addEventListener('astro:page-load', () => {
     initIndustries();
     initBrandCarousels();
+    // Despues de initIndustries (que dispara animaciones de entrada con su propio
+    // ScrollTrigger.refresh implicito) y con un frame de margen para que las imagenes
+    // ya hayan reservado su alto real -- si no, snapPoints se calcula contra un layout
+    // todavia mas corto de lo que sera.
+    requestAnimationFrame(() => requestAnimationFrame(initIndustriesSnap));
   });
-  document.addEventListener('astro:before-swap', () => carouselTweens.forEach((t) => t.kill()));
+  document.addEventListener('astro:before-swap', () => {
+    carouselTweens.forEach((t) => t.kill());
+    snapMM?.revert();
+    window.removeEventListener('resize', snapResizeHandler);
+  });
 </script>
 
 <style>

@@ -113,7 +113,66 @@ const {
     });
   }
 
-  document.addEventListener('astro:page-load', initStats);
+  // Snap mandatory (pedido explicito, mismo criterio que IndustriesGallery.astro):
+  // centra .stats__inner en el medio del viewport -- nunca mas arriba ni mas abajo.
+  // Solo desktop (matchMedia): igual criterio que el resto de los efectos de scroll
+  // pesados del proyecto (CLAUDE.md 15.6.1).
+  let snapMM;
+  let snapResizeHandler;
+
+  function initStatsSnap() {
+    snapMM?.revert();
+    window.removeEventListener('resize', snapResizeHandler);
+    const section = document.querySelector('[data-gsap-section="stats"]');
+    const inner = section?.querySelector('.stats__inner');
+    if (!section || !inner) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    snapMM = gsap.matchMedia();
+    snapMM.add('(min-width: 768px)', () => {
+      // El alto de .stats (padding incluido) apenas supera un viewport -- casi no hay
+      // "rango" de scroll dentro de la seccion, asi que mapear progreso 0-1 contra el
+      // alto de la SECCION (como en IndustriesGallery, que si tiene rango de sobra) no
+      // alcanza para centrar de verdad (bug real, medido: quedaba ~100px arriba del
+      // centro). En vez de eso: start/end numericos, un rango propio y simetrico
+      // alrededor del scrollY exacto que centra .stats__inner, con snapTo:0.5 siempre
+      // apuntando a ese unico punto exacto.
+      const innerRect = inner.getBoundingClientRect();
+      const innerCenter = innerRect.top + window.scrollY + innerRect.height / 2;
+      const idealScrollY = innerCenter - window.innerHeight / 2;
+      const buffer = window.innerHeight * 0.6;
+
+      const st = ScrollTrigger.create({
+        trigger: document.body,
+        start: idealScrollY - buffer,
+        end: idealScrollY + buffer,
+        snap: {
+          snapTo: 0.5,
+          duration: { min: 0.15, max: 0.4 },
+          delay: 0.03,
+          ease: 'power2.out',
+        },
+      });
+
+      return () => st.kill();
+    });
+
+    let resizeTimer;
+    snapResizeHandler = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(initStatsSnap, 200);
+    };
+    window.addEventListener('resize', snapResizeHandler);
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    initStats();
+    requestAnimationFrame(() => requestAnimationFrame(initStatsSnap));
+  });
+  document.addEventListener('astro:before-swap', () => {
+    snapMM?.revert();
+    window.removeEventListener('resize', snapResizeHandler);
+  });
 </script>
 
 <style>
@@ -160,7 +219,8 @@ const {
        nunca clamp()/vw, regla dura del proyecto) -- ya no sube a 30px en desktop grande. */
     font-family: var(--font-heading);
     font-weight: 300;
-    font-size: 20px;
+    /* +20% pedido explicito (antes: 20px / 24px) */
+    font-size: 24px;
     line-height: 1.15;
     color: color-mix(in srgb, var(--text-primary) 60%, transparent);
     max-width: 28rem;
@@ -168,7 +228,7 @@ const {
   }
 
   @media (min-width: 768px) {
-    .stats__intro { font-size: 24px; }
+    .stats__intro { font-size: 28.8px; }
   }
 
   .stats__grid {

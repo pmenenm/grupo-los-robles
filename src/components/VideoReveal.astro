@@ -80,29 +80,23 @@ const _title = title ?? t.title;
     // el contenido avance -- se queda estatica (ver CSS base, ya en su estado final).
     mm = gsap.matchMedia();
     mm.add('(min-width: 768px)', () => {
-      // Se anima un objeto plano (numeros), NUNCA el string de clip-path directamente:
-      // "inset(25% 20% 25% 20% round 12px)" tiene top==bottom y left==right, y el
-      // navegador lo serializa de vuelta como la forma corta "inset(25% 20% round 12px)"
-      // (3 numeros) apenas se lee su computed style. GSAP interpola clip-path por
-      // posicion de numero en el string -- si el punto de partida quedo colapsado a 3
-      // numeros y el destino ("inset(0% 0% 0% 0% round 0px)") tiene 5, el emparejamiento
-      // por indice se desalinea y cada lado termina animando a una velocidad distinta
-      // (bug real detectado: el lado inferior/izquierdo llegaba a 0 mucho antes que el
-      // superior/derecho, se veia como si "saltara" en vez de crecer parejo). Tweener
-      // dos numeros (inset vertical/horizontal) y construir el string nosotros mismos en
-      // cada frame elimina el problema de raiz: los 4 lados quedan siempre en simetria
-      // perfecta (arriba=abajo, izquierda=derecha) en todo momento del scroll.
-      const clip = { y: 25, x: 20, r: 12 };
+      // transform: scale(), NUNCA clip-path animado -- clip-path fuerza al navegador a
+      // recalcular y repintar la region visible del video en CADA frame de scroll sobre
+      // una caja del tamano del viewport; es costoso de verdad (medido con Playwright:
+      // ~23fps promedio, frames de hasta 130ms, y el jank persistia igual con el video
+      // en pausa -- no era el video, era el clip-path). transform es una operacion de
+      // compositor puro (GPU), no repinta nada -- mismo efecto visual de "tarjeta que
+      // crece", sin el costo. scaleX/scaleY no uniformes replican las proporciones del
+      // recorte original (25% vertical / 20% horizontal de inset -> caja de 50% alto x
+      // 60% ancho); border-radius sigue animando aparte (barato, es solo la esquina).
+      const clip = { scaleX: 0.6, scaleY: 0.5, r: 12 };
       const applyClip = () => {
-        media.style.clipPath = `inset(${clip.y}% ${clip.x}% round ${clip.r}px)`;
+        media.style.transform = `scale(${clip.scaleX}, ${clip.scaleY})`;
+        media.style.borderRadius = `${clip.r}px`;
       };
       applyClip();
       gsap.set(text, { opacity: 0, y: 40 });
-      // will-change: promueve el <video> a su propia capa de composicion ANTES de que
-      // arranque el scrub -- animar clip-path sobre video puede generar jank real (frames
-      // perdidos) si el navegador crea esa capa recien al primer cambio, en vez de un
-      // "salto" de posicion (que ya se verifico, con Playwright, que no existe).
-      media.style.willChange = 'clip-path';
+      media.style.willChange = 'transform';
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -120,7 +114,7 @@ const _title = title ?? t.title;
         },
       });
 
-      tl.to(clip, { y: 0, x: 0, r: 0, ease: 'none', duration: 1, onUpdate: applyClip })
+      tl.to(clip, { scaleX: 1, scaleY: 1, r: 0, ease: 'none', duration: 1, onUpdate: applyClip })
         .to(text, { opacity: 1, y: 0, ease: 'power2.out', duration: 0.5 }, '<0.5')
         // Hold breve (antes 0.5, ahora 0.15): solo lo justo para que el video llegue a
         // pantalla completa un instante antes de soltar el pin, sin dejar un tramo largo
@@ -151,15 +145,23 @@ const _title = title ?? t.title;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    /* Igual razon que .land-reveal__media: acota el repintado del pin+scrub a esta caja. */
+    contain: layout paint;
   }
 
   .land-reveal__media {
     position: absolute;
     inset: 0;
     /* Estado final (sin JS / reduced-motion / mobile): video a sangre completa, sin
-       recorte -- la tarjeta recortada inicial es una animacion progresiva que el script
-       aplica solo en desktop (ver <script>), nunca el estado base. */
-    clip-path: inset(0% 0% 0% 0% round 0px);
+       recorte -- la tarjeta mas chica inicial es una animacion progresiva que el script
+       aplica solo en desktop via transform (ver <script>), nunca el estado base. */
+    transform: scale(1);
+    border-radius: 0;
+    /* border-radius (a diferencia de clip-path) solo recorta hijos que desborden si hay
+       overflow != visible -- sin esto el video de adentro asomaba cuadrado por las
+       esquinas redondeadas. */
+    overflow: hidden;
+    contain: paint;
   }
 
   .land-reveal__video {

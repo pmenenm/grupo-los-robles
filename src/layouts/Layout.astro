@@ -82,10 +82,22 @@ const {
 
       function init() {
         lenis = new Lenis({
-          duration: 1.2,
+          // 0.7, no 1.2 (pedido explicito, autorizado): 1.2s de deslizamiento tras cada
+          // input se sentia "pegajoso" especificamente en las secciones con scroll-jack
+          // (VideoReveal, TerritoryMap, Manifiesto) -- ahi el desfase entre el input y la
+          // reaccion en pantalla es mucho mas perceptible que en scroll libre. Reproducido
+          // en varias computadoras distintas del Ingeniero, asi que es el valor de
+          // configuracion, no el hardware.
+          duration: 0.7,
           easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
           orientation: 'vertical',
           smoothWheel: true,
+          // wheelMultiplier: la rueda avanza un poco mas por tick (scroll "firme", no
+          // "jabonoso", pedido explicito). No se agrega smoothTouch:false -- esa opcion
+          // no existe en Lenis 1.x (instalado: 1.3.23), fue reemplazada por syncTouch/
+          // touchMultiplier; por defecto (sin syncTouch:true, que este proyecto no usa)
+          // el scroll tactil ya es nativo/sin suavizado, que es justo lo que se buscaba.
+          wheelMultiplier: 1.2,
         });
         window.lenis = lenis;
 

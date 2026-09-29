@@ -124,10 +124,27 @@ const {
   }
 
   .manifesto__bg {
-    position: absolute;
-    inset: 0;
+    /* sticky + 100svh, NO absolute+inset:0 (pedido explicito, bug real medido): antes
+       este contenedor se estiraba al alto TOTAL de .manifesto (que incluye el
+       TerritoryMap debajo, ~4000px+) y el canvas del shader heredaba ese mismo alto --
+       23 megapixeles por frame (2880x8104 con dpr:2), un ruido fbm de 5 octavas sobre
+       eso costaba ~100ms/frame (~10fps sostenidos, medido con PerformanceObserver
+       'longtask': tareas de 90-110ms una tras otra sin parar mientras la seccion
+       estaba en pantalla). Con sticky+100svh el canvas queda fijo en un viewport
+       (~9x menos pixeles), mismo patron ya probado en ContactReveal.astro
+       (.reveal__bg) y compatible con el overflow:visible que .manifesto necesita para
+       el sticky propio de TerritoryMap. */
+    position: sticky;
+    top: 0;
+    height: 100svh;
     overflow: hidden;
     z-index: 0;
+    /* Sin esto, el padding-top de .manifesto (--space-2xl, 12rem) empujaba el fondo
+       192px hacia abajo de donde termina la seccion de arriba (VideoReveal) -- un
+       margen visible antes de que empiece el shader (pedido explicito: "el margen debe
+       ser minimo cerca de la seccion de arriba"). El margen negativo lo cancela solo
+       para este elemento, sin tocar el padding real del resto del contenido. */
+    margin-top: calc(-1 * var(--space-2xl));
   }
 
   .manifesto :global(.manifesto__shaderfield) {
